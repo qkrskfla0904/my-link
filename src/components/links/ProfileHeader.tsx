@@ -31,13 +31,22 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       </h1>
 
       {/* Specialty Badge */}
-      <div className="flex items-center justify-center gap-2 mt-2">
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-          🏆 스포츠산업전공
-        </span>
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-          🎓 대학생
-        </span>
+      <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
+        {(profile.tags && profile.tags.length > 0
+          ? profile.tags
+          : ["💻 프론트엔드 개발자", "🚀 Next.js & React"]
+        ).map((tag, idx) => (
+          <span
+            key={idx}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
+              idx % 2 === 0
+                ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                : "bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+            }`}
+          >
+            {tag}
+          </span>
+        ))}
       </div>
 
       {/* Bio */}

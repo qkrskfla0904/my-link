@@ -16,5 +16,6 @@ export interface UserProfile {
   displayName: string;
   bio?: string;
   avatarUrl?: string;
+  tags?: string[];
   links: LinkItem[];
 }
