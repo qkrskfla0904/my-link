@@ -21,8 +21,8 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       stroke="currentColor"
       strokeWidth="2"
       fill="none"
@@ -40,8 +40,8 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       stroke="currentColor"
       strokeWidth="2"
       fill="none"
@@ -90,42 +90,42 @@ export function LinkCard({ link }: LinkCardProps) {
       href={link.url}
       target={link.url.startsWith("http") ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className="group relative block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2.5 transition-all duration-150 shadow-xs"
+      className="group relative block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2 sm:p-2.5 transition-all duration-150 shadow-xs"
     >
-      <div className="flex items-center justify-between gap-2.5">
+      <div className="flex items-center justify-between gap-2">
         {/* Left: Icon & Headline Info */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Beveled Icon Box */}
-          <div className="w-7 h-7 bg-[#8ba1d4] nintendo-plate flex items-center justify-center text-[#21242e] shrink-0">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 bg-[#8ba1d4] nintendo-plate flex items-center justify-center text-[#21242e] shrink-0">
             <IconComponent />
           </div>
 
           <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
               {/* Category Pill */}
               {link.category && (
-                <span className="px-1.5 py-0.2 bg-[#21242e] text-[#ecab37] text-[9px] font-bold uppercase tracking-wider shrink-0">
+                <span className="px-1.5 py-0.2 bg-[#21242e] text-[#ecab37] text-[8px] sm:text-[9px] font-bold uppercase tracking-wider shrink-0">
                   {link.category}
                 </span>
               )}
 
               {/* Hot / Popular Badge */}
               {link.isPopular && (
-                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-[#e60012] text-white text-[8px] font-black uppercase shrink-0">
-                  <Flame className="w-2.5 h-2.5 fill-white" />
+                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-[#e60012] text-white text-[7px] sm:text-[8px] font-black uppercase shrink-0">
+                  <Flame className="w-2 h-2 fill-white" />
                   HOT
                 </span>
               )}
 
               {/* Title Link in Ink-Soft */}
-              <h3 className="font-bold text-xs text-[#3d4f97] group-hover:text-[#e60012] transition-colors truncate max-w-full">
+              <h3 className="font-bold text-[11px] sm:text-xs text-[#3d4f97] group-hover:text-[#e60012] transition-colors truncate max-w-full">
                 {link.title}
               </h3>
             </div>
 
             {/* Description */}
             {link.description && (
-              <p className="text-[11px] text-[#21242e] font-normal mt-0.5 truncate max-w-full">
+              <p className="text-[10px] sm:text-[11px] text-[#21242e] font-normal mt-0.5 truncate max-w-full">
                 {link.description}
               </p>
             )}
@@ -133,21 +133,21 @@ export function LinkCard({ link }: LinkCardProps) {
         </div>
 
         {/* Right: Copy Button & Signal-Orange Chevron Chip */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 ml-0.5">
           {link.url !== "#" && (
             <button
               onClick={handleCopy}
               title="Copy URL"
-              className="px-1.5 py-1 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[9px] font-bold uppercase nintendo-chip flex items-center gap-1 cursor-pointer"
+              className="px-1.5 py-0.5 sm:py-1 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[8px] sm:text-[9px] font-bold uppercase nintendo-chip flex items-center gap-0.5 cursor-pointer whitespace-nowrap"
             >
               {copied ? (
                 <>
-                  <Check className="w-3 h-3 stroke-[3]" />
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
                   <span>OK</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3" />
+                  <Copy className="w-2.5 h-2.5" />
                   <span>COPY</span>
                 </>
               )}
@@ -155,8 +155,8 @@ export function LinkCard({ link }: LinkCardProps) {
           )}
 
           {/* Button-Arrow-Chip: 18px Signal Orange Chip */}
-          <div className="w-5 h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs">
-            <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
+          <div className="w-4 h-4 sm:w-5 sm:h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs shrink-0">
+            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
           </div>
         </div>
       </div>
