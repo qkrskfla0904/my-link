@@ -8,13 +8,15 @@ import { CategoryFilter } from "@/components/links/CategoryFilter";
 import { ThemePicker } from "@/components/common/ThemePicker";
 import { ShareModal } from "@/components/common/ShareModal";
 import { ThemeAccent } from "@/types";
-import { Sparkles, Layers } from "lucide-react";
+import { ChevronRight, Radio, Award } from "lucide-react";
 
 export default function HomePage() {
   const profile = INITIAL_PROFILE;
-  const [theme, setTheme] = useState<ThemeAccent>("emerald");
+  const [theme, setTheme] = useState<ThemeAccent>("violet");
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [pollVote, setPollVote] = useState("option-1");
+  const [pollSubmitted, setPollSubmitted] = useState(false);
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -31,62 +33,133 @@ export default function HomePage() {
   }, [profile.links, selectedCategory]);
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-8 px-4 overflow-hidden">
-      {/* Background Ambient Glow Meshes */}
-      <div className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-lg h-96 bg-gradient-to-tr from-emerald-300/30 via-teal-200/20 to-sky-300/30 dark:from-emerald-900/20 dark:via-teal-900/10 dark:to-sky-900/20 blur-3xl animate-blob-1 rounded-full -z-10" />
-      <div className="pointer-events-none absolute top-40 left-1/3 w-80 h-80 bg-gradient-to-br from-violet-300/20 via-pink-200/20 to-amber-200/20 dark:from-violet-950/20 dark:via-rose-950/10 dark:to-amber-950/20 blur-3xl animate-blob-2 rounded-full -z-10" />
+    <div className="w-full p-2 sm:p-3 space-y-3">
+      {/* 1. Hero Field Panel (Profile Header) */}
+      <ProfileHeader
+        profile={profile}
+        theme={theme}
+        onOpenShareModal={() => setIsShareOpen(true)}
+      />
 
-      <div className="max-w-md mx-auto flex flex-col justify-between min-h-[calc(100vh-7rem)]">
-        <div>
-          {/* Top Bar: Theme Picker & Info */}
-          <div className="flex items-center justify-between mb-6">
-            <ThemePicker currentTheme={theme} onSelectTheme={setTheme} />
-
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800/80 backdrop-blur-md shadow-2xs text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
-              <Layers className="w-3.5 h-3.5 text-zinc-400" />
-              <span>{profile.links.length}개 링크</span>
+      {/* 2. Main Two-Column Modular Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+        {/* Left Column: Official News & Link Collection (2/3 width) */}
+        <div className="md:col-span-2 space-y-2">
+          {/* Section Label Bar */}
+          <div className="w-full bg-[#8ba1d4] nintendo-plate px-2.5 py-1 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-[#f68d1f]" />
+              <h2 className="text-xs font-bold uppercase tracking-[0.5px] text-[#21242e]">
+                OFFICIAL LINKS & DIRECTORY
+              </h2>
             </div>
+            <span className="text-[10px] font-bold text-[#3d4f97]">
+              {filteredLinks.length} ITEMS READY
+            </span>
           </div>
 
-          {/* Profile Header Component */}
-          <ProfileHeader
-            profile={profile}
+          {/* Category Filter Tabs */}
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
             theme={theme}
-            onOpenShareModal={() => setIsShareOpen(true)}
           />
 
-          {/* Category Filter */}
-          <div className="mb-4">
-            <CategoryFilter
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              theme={theme}
-            />
-          </div>
-
-          {/* Links List */}
-          <div className="space-y-3">
+          {/* Stacked Link Cards (News-Row Style) */}
+          <div className="space-y-1.5">
             {filteredLinks.map((link) => (
               <LinkCard key={link.id} link={link} theme={theme} />
             ))}
 
             {filteredLinks.length === 0 && (
-              <div className="p-8 text-center rounded-2xl bg-white/50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  해당 카테고리의 링크가 없습니다.
+              <div className="p-4 text-center bg-[#dedede] nintendo-inset">
+                <p className="text-xs text-[#21242e] font-bold uppercase">
+                  NO LINKS FOUND IN THIS SECTION.
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Footer Info Box */}
-        <div className="mt-12 p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/80 text-center shadow-xs">
-          <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium flex items-center justify-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-            나만의 SNS, 블로그, 포트폴리오 링크를 마이링크 하나로 연결해 보세요!
-          </p>
+        {/* Right Rail: Action Modules, Player's Poll & Info Box (1/3 width) */}
+        <div className="space-y-3">
+          {/* Theme / Mode Switcher Box */}
+          <div className="space-y-1">
+            <div className="bg-[#21242e] text-[#ecab37] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <span>≡ CHASSIS DISPLAY MODE</span>
+            </div>
+            <ThemePicker currentTheme={theme} onSelectTheme={setTheme} />
+          </div>
+
+          {/* What Is Info-Box */}
+          <div className="bg-white nintendo-plate p-3 space-y-2 text-[#21242e]">
+            <div className="inline-block px-2 py-0.5 bg-[#ecab37] text-[#21242e] text-[9px] font-black uppercase">
+              WHAT IS — MYLINK HUB
+            </div>
+            <p className="text-xs leading-relaxed text-[#21242e]">
+              A complete centralized console hardware interface connecting all developer repositories, technical writings, and professional social profiles.
+            </p>
+          </div>
+
+          {/* Player's Poll Module */}
+          <div className="bg-[#8ba1d4] nintendo-plate p-3 space-y-2">
+            <div className="flex items-center justify-between border-b border-[#3d4f97] pb-1">
+              <span className="text-[11px] font-black uppercase text-[#21242e] flex items-center gap-1">
+                <Radio className="w-3.5 h-3.5 text-[#f68d1f]" />
+                PLAYER&apos;S POLL
+              </span>
+              <span className="text-[9px] font-bold text-[#3d4f97]">
+                ISSUE #01
+              </span>
+            </div>
+
+            <p className="text-[11px] font-bold text-[#21242e]">
+              Which stack do you prefer for 2001-era hardware web UIs?
+            </p>
+
+            <div className="space-y-1 text-xs">
+              {[
+                { id: "option-1", text: "React 19 & Next.js" },
+                { id: "option-2", text: "Tailwind CSS Metal Chassis" },
+                { id: "option-3", text: "HTML Table & Beveled GIF" },
+              ].map((opt) => (
+                <label
+                  key={opt.id}
+                  className="flex items-center gap-1.5 text-[11px] text-[#21242e] cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="poll"
+                    value={opt.id}
+                    checked={pollVote === opt.id}
+                    onChange={() => setPollVote(opt.id)}
+                    className="accent-[#f68d1f]"
+                  />
+                  <span>{opt.text}</span>
+                </label>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setPollSubmitted(true)}
+              className="w-full py-1 bg-[#f68d1f] hover:bg-[#e48600] text-white text-[10px] font-black uppercase nintendo-chip flex items-center justify-center gap-1 cursor-pointer"
+            >
+              {pollSubmitted ? "VOTE RECORDED! ✓" : "SUBMIT VOTE"}
+              <ChevronRight className="w-3 h-3 stroke-[3]" />
+            </button>
+          </div>
+
+          {/* Systems Badge Promo Card */}
+          <div className="bg-[#21242e] nintendo-inset p-2.5 text-center text-white space-y-1">
+            <div className="flex items-center justify-center gap-1 text-[#f68d1f] text-[10px] font-black uppercase">
+              <Award className="w-3.5 h-3.5" />
+              <span>NINTENDO POWER VERIFIED</span>
+            </div>
+            <p className="text-[9px] text-[#9fbee7] font-mono">
+              COMPATIBLE WITH GAME BOY ADVANCE & N64 EXPANSION PAK
+            </p>
+          </div>
         </div>
       </div>
 

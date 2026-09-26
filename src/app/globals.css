@@ -1,54 +1,90 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #18181b;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #f4f4f5;
-  }
+  --canvas: #7a8aba;
+  --periwinkle: #8ba1d4;
+  --canvas-soft: #9fbee7;
+  --lavender: #acace7;
+  --ice: #c0d5e6;
+  --chrome-indigo: #3d4f97;
+  --muted-indigo: #60619c;
+  --platinum: #dedede;
+  --carbon: #21242e;
+  --primary-red: #e60012;
+  --signal-orange: #f68d1f;
+  --amber-util: #ecab37;
+  --nav-gold: #e48600;
+  --systems-teal: #206479;
+  --games-red: #a7282b;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+  background-color: var(--canvas);
+  color: var(--carbon);
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* Smooth background mesh animations */
-@keyframes float-slow {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  50% {
-    transform: translate(20px, -25px) scale(1.1);
-  }
+/* 2001 Carbon Speaker Grille Halftone Texture */
+.bg-carbon-halftone {
+  background-color: #21242e;
+  background-image: radial-gradient(#3c4254 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
-@keyframes float-reverse {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  50% {
-    transform: translate(-25px, 20px) scale(1.08);
-  }
+/* 2001 Chassis Bevel Systems */
+/* Level 1 — Flush/Raised Hardware Metal Plate */
+.nintendo-plate {
+  background-color: #8ba1d4;
+  border-top: 2px solid rgba(255, 255, 255, 0.7);
+  border-left: 2px solid rgba(255, 255, 255, 0.7);
+  border-right: 2px solid #3d4f97;
+  border-bottom: 2px solid #3d4f97;
 }
 
-.animate-blob-1 {
-  animation: float-slow 12s ease-in-out infinite;
+/* Level 0 — Inset / Recessed Hardware Surface */
+.nintendo-inset {
+  border-top: 2px solid #3d4f97;
+  border-left: 2px solid #3d4f97;
+  border-right: 2px solid rgba(255, 255, 255, 0.8);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.8);
 }
 
-.animate-blob-2 {
-  animation: float-reverse 15s ease-in-out infinite;
+/* Level 2 — Raised Chip / Button */
+.nintendo-chip {
+  border-top: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-left: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-right: 1.5px solid #283463;
+  border-bottom: 1.5px solid #283463;
+}
+
+.nintendo-chip:active {
+  border-top: 1.5px solid #283463;
+  border-left: 1.5px solid #283463;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.85);
+}
+
+/* Game-Box Cover Outlined Display Wordmark */
+.nintendo-boxart-text {
+  font-weight: 900;
+  font-style: italic;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  text-shadow:
+    -1.5px -1.5px 0 #21242e,
+     1.5px -1.5px 0 #21242e,
+    -1.5px  1.5px 0 #21242e,
+     1.5px  1.5px 0 #21242e,
+     3px 3px 0 #21242e;
+}
+
+/* Chrome Silkscreen Micro Labels */
+.nintendo-label {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }

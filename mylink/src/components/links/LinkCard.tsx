@@ -8,7 +8,7 @@ import {
   Globe,
   Copy,
   Check,
-  ArrowUpRight,
+  ChevronRight,
   Flame,
 } from "lucide-react";
 
@@ -17,64 +17,12 @@ interface LinkCardProps {
   theme: ThemeAccent;
 }
 
-const themeStyles: Record<
-  ThemeAccent,
-  {
-    borderHover: string;
-    textHover: string;
-    iconBg: string;
-    iconText: string;
-    popularBadge: string;
-  }
-> = {
-  emerald: {
-    borderHover: "hover:border-emerald-400 dark:hover:border-emerald-500/80",
-    textHover: "group-hover:text-emerald-600 dark:group-hover:text-emerald-400",
-    iconBg: "bg-emerald-50 dark:bg-emerald-950/60",
-    iconText: "text-emerald-600 dark:text-emerald-400",
-    popularBadge:
-      "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-  },
-  violet: {
-    borderHover: "hover:border-violet-400 dark:hover:border-violet-500/80",
-    textHover: "group-hover:text-violet-600 dark:group-hover:text-violet-400",
-    iconBg: "bg-violet-50 dark:bg-violet-950/60",
-    iconText: "text-violet-600 dark:text-violet-400",
-    popularBadge:
-      "bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
-  },
-  sky: {
-    borderHover: "hover:border-sky-400 dark:hover:border-sky-500/80",
-    textHover: "group-hover:text-sky-600 dark:group-hover:text-sky-400",
-    iconBg: "bg-sky-50 dark:bg-sky-950/60",
-    iconText: "text-sky-600 dark:text-sky-400",
-    popularBadge:
-      "bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
-  },
-  rose: {
-    borderHover: "hover:border-rose-400 dark:hover:border-rose-500/80",
-    textHover: "group-hover:text-rose-600 dark:group-hover:text-rose-400",
-    iconBg: "bg-rose-50 dark:bg-rose-950/60",
-    iconText: "text-rose-600 dark:text-rose-400",
-    popularBadge:
-      "bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
-  },
-  amber: {
-    borderHover: "hover:border-amber-400 dark:hover:border-amber-500/80",
-    textHover: "group-hover:text-amber-600 dark:group-hover:text-amber-400",
-    iconBg: "bg-amber-50 dark:bg-amber-950/60",
-    iconText: "text-amber-600 dark:text-amber-400",
-    popularBadge:
-      "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-  },
-};
-
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="24"
-      height="24"
+      width="16"
+      height="16"
       stroke="currentColor"
       strokeWidth="2"
       fill="none"
@@ -92,8 +40,8 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="24"
-      height="24"
+      width="16"
+      height="16"
       stroke="currentColor"
       strokeWidth="2"
       fill="none"
@@ -124,10 +72,9 @@ const getIcon = (iconName?: string) => {
   }
 };
 
-export function LinkCard({ link, theme }: LinkCardProps) {
+export function LinkCard({ link }: LinkCardProps) {
   const [copied, setCopied] = useState(false);
   const IconComponent = getIcon(link.icon);
-  const styles = themeStyles[theme] || themeStyles.emerald;
 
   const handleCopy = (e: React.MouseEvent) => {
     if (link.url === "#") return;
@@ -143,69 +90,73 @@ export function LinkCard({ link, theme }: LinkCardProps) {
       href={link.url}
       target={link.url.startsWith("http") ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className={`group relative block w-full p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/90 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-xs hover:shadow-lg ${styles.borderHover} transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.99]`}
+      className="group relative block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2.5 transition-all duration-150 shadow-xs"
     >
-      <div className="flex items-center justify-between gap-3">
-        {/* Left Side: Icon & Title/Description */}
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div
-            className={`p-2.5 rounded-xl ${styles.iconBg} ${styles.iconText} transition-transform group-hover:scale-110 duration-200 shrink-0`}
-          >
-            <IconComponent className="w-5 h-5" />
+      <div className="flex items-center justify-between gap-2.5">
+        {/* Left: Icon & Headline Info */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {/* Beveled Icon Box */}
+          <div className="w-7 h-7 bg-[#8ba1d4] nintendo-plate flex items-center justify-center text-[#21242e] shrink-0">
+            <IconComponent />
           </div>
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3
-                className={`font-bold text-sm text-zinc-900 dark:text-zinc-100 ${styles.textHover} transition-colors tracking-tight truncate`}
-              >
-                {link.title}
-              </h3>
-
-              {link.isPopular && (
-                <span
-                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${styles.popularBadge}`}
-                >
-                  <Flame className="w-3 h-3 text-orange-500 fill-orange-500" />
-                  인기
-                </span>
-              )}
-
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Category Pill */}
               {link.category && (
-                <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-700/60">
+                <span className="px-1.5 py-0.2 bg-[#21242e] text-[#ecab37] text-[9px] font-bold uppercase tracking-wider shrink-0">
                   {link.category}
                 </span>
               )}
+
+              {/* Hot / Popular Badge */}
+              {link.isPopular && (
+                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-[#e60012] text-white text-[8px] font-black uppercase shrink-0">
+                  <Flame className="w-2.5 h-2.5 fill-white" />
+                  HOT
+                </span>
+              )}
+
+              {/* Title Link in Ink-Soft */}
+              <h3 className="font-bold text-xs text-[#3d4f97] group-hover:text-[#e60012] transition-colors truncate max-w-full">
+                {link.title}
+              </h3>
             </div>
 
+            {/* Description */}
             {link.description && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">
+              <p className="text-[11px] text-[#21242e] font-normal mt-0.5 truncate max-w-full">
                 {link.description}
               </p>
             )}
           </div>
         </div>
 
-        {/* Right Side: Copy Button & External Arrow */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Right: Copy Button & Signal-Orange Chevron Chip */}
+        <div className="flex items-center gap-1.5 shrink-0">
           {link.url !== "#" && (
             <button
               onClick={handleCopy}
-              title="링크 복사"
-              className="p-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              title="Copy URL"
+              className="px-1.5 py-1 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[9px] font-bold uppercase nintendo-chip flex items-center gap-1 cursor-pointer"
             >
               {copied ? (
-                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                  <Check className="w-3.5 h-3.5" /> 복사됨
-                </span>
+                <>
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  <span>OK</span>
+                </>
               ) : (
-                <Copy className="w-4 h-4" />
+                <>
+                  <Copy className="w-3 h-3" />
+                  <span>COPY</span>
+                </>
               )}
             </button>
           )}
 
-          <div className="p-1.5 rounded-lg text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200">
-            <ArrowUpRight className="w-4 h-4" />
+          {/* Button-Arrow-Chip: 18px Signal Orange Chip */}
+          <div className="w-5 h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs">
+            <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
           </div>
         </div>
       </div>

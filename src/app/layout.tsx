@@ -1,22 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/common/Header";
 import { Footer } from "@/components/common/Footer";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "마이링크 | MyLink",
-  description: "나만의 맞춤형 링크 모음 및 공유 플랫폼, 마이링크",
+  title: "MyLink.com (2001) | Official Nintendo Style Hardware Hub",
+  description: "Nintendo.com circa 2001 console hardware web interface for MyLink",
 };
 
 export default function RootLayout({
@@ -25,14 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+    <html lang="ko" className="h-full">
+      <body className="min-h-full flex flex-col bg-[#7a8aba] text-[#21242e] font-sans antialiased selection:bg-[#f68d1f] selection:text-white">
+        <div className="w-full max-w-[830px] mx-auto min-h-screen flex flex-col bg-[#7a8aba] border-x-2 border-[#3d4f97] shadow-2xl">
+          <Header />
+          <main className="flex-1 bg-[#7a8aba]">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
