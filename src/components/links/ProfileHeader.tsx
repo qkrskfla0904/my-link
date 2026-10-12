@@ -1,14 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { UserProfile, ThemeAccent } from "@/types";
-import { Heart, ChevronRight, Share2, Activity } from "lucide-react";
+import { Heart, ChevronRight, Share2, Activity, Coffee, Globe, Mail, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ProfileHeaderProps {
   profile: UserProfile;
   theme: ThemeAccent;
   onOpenShareModal: () => void;
+  onLikeChange?: (newLikes: number) => void;
 }
 
 const themeBackgrounds: Record<ThemeAccent, string> = {
@@ -19,24 +22,48 @@ const themeBackgrounds: Record<ThemeAccent, string> = {
   amber: "bg-[#ecab37]", // Classic Gold
 };
 
+function GithubSmallIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  );
+}
+
+function LinkedinSmallIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect width="4" height="12" x="2" y="9" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
+
 export function ProfileHeader({
   profile,
   theme,
   onOpenShareModal,
+  onLikeChange,
 }: ProfileHeaderProps) {
   const [likesCount, setLikesCount] = useState(profile.stats?.likes ?? 245);
   const [hasLiked, setHasLiked] = useState(false);
   const heroBg = themeBackgrounds[theme] || themeBackgrounds.violet;
 
   const handleLike = () => {
-    if (!hasLiked) {
-      setLikesCount((prev) => prev + 1);
-      setHasLiked(true);
-    } else {
-      setLikesCount((prev) => prev - 1);
-      setHasLiked(false);
+    const updated = hasLiked ? likesCount - 1 : likesCount + 1;
+    setLikesCount(updated);
+    setHasLiked(!hasLiked);
+    if (onLikeChange) {
+      onLikeChange(updated);
     }
   };
+
+  // Quick SNS Links from profile links
+  const snsLinks = profile.links.filter(
+    (l) => ["github", "blog", "linkedin", "mail", "globe", "youtube", "twitter"].includes(l.icon || "") || l.category === "SNS"
+  ).slice(0, 5);
 
   return (
     <div className="w-full mb-3 sm:mb-4">
@@ -46,41 +73,47 @@ export function ProfileHeader({
         <div className="absolute inset-0 opacity-15 pointer-events-none bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:16px_16px]" />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
-          {/* Hardware Frame Avatar */}
+          {/* shadcn/ui Avatar Component */}
           <div className="relative shrink-0">
-            <div className="w-20 h-20 sm:w-28 sm:h-28 bg-[#21242e] nintendo-inset p-1 relative shadow-md">
-              <div className="relative w-full h-full overflow-hidden bg-[#7a8aba]">
-                {profile.avatarUrl ? (
-                  <Image
-                    src={profile.avatarUrl}
-                    alt={profile.displayName}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-xl sm:text-2xl font-black">
-                    {profile.displayName.slice(0, 1)}
-                  </div>
-                )}
-              </div>
-            </div>
+            <Avatar className="w-20 h-20 sm:w-28 sm:h-28 shadow-md rounded-none">
+              {profile.avatarUrl && (
+                <AvatarImage
+                  src={profile.avatarUrl}
+                  alt={profile.displayName}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="rounded-none font-black text-xl sm:text-2xl">
+                {profile.displayName.slice(0, 1)}
+              </AvatarFallback>
+            </Avatar>
 
             {/* LED Status Indicator */}
             {profile.isAvailableForHire && (
-              <div className="absolute -bottom-1 -right-1 px-1 sm:px-1.5 py-0.5 bg-[#21242e] border border-white text-[7px] sm:text-[8px] font-bold text-[#00ff66] flex items-center gap-1 shadow-xs uppercase whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-ping shrink-0" />
-                ONLINE
+              <div className="absolute -bottom-1 -right-1">
+                <Badge variant="nintendoOnline" className="text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-ping shrink-0" />
+                  ONLINE
+                </Badge>
               </div>
             )}
           </div>
 
           {/* Profile Details & Box-Art Wordmark */}
           <div className="flex-1 text-center sm:text-left min-w-0 w-full">
-            {/* System Category Tag */}
-            <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 bg-[#21242e] text-[#f68d1f] text-[8px] sm:text-[9px] font-black uppercase tracking-wider mb-1 max-w-full truncate">
-              <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#f68d1f] shrink-0" />
-              <span className="truncate">NINTENDO DEV HUB</span>
+            {/* Status & Category Bar */}
+            <div className="mb-1 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+              <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px]">
+                <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#f68d1f] shrink-0" />
+                <span>NINTENDO DEV HUB</span>
+              </Badge>
+
+              {profile.isAvailableForHire && (
+                <Badge variant="nintendoGold" className="text-[8px] sm:text-[9px] flex items-center gap-1">
+                  <Coffee className="w-2.5 h-2.5" />
+                  <span>Available for Hire</span>
+                </Badge>
+              )}
             </div>
 
             {/* Chunky Box-Art Display Title */}
@@ -95,7 +128,7 @@ export function ProfileHeader({
 
             {/* Bio */}
             {profile.bio && (
-              <p className="text-[11px] sm:text-xs text-white/90 font-medium mt-1.5 sm:mt-2 leading-relaxed bg-[#21242e]/40 p-1.5 sm:p-2 border-l-2 border-[#f68d1f] break-keep">
+              <p className="text-[11px] sm:text-xs text-white/90 font-medium mt-1.5 sm:mt-2 leading-relaxed bg-[#21242e]/40 p-1.5 sm:p-2 border-l-2 border-[#f68d1f] break-keep text-left">
                 {profile.bio}
               </p>
             )}
@@ -106,56 +139,94 @@ export function ProfileHeader({
                 ? profile.tags
                 : ["💻 FRONTEND", "🚀 NEXT.JS & REACT"]
               ).map((tag, idx) => (
-                <span
+                <Badge
                   key={idx}
-                  className="px-1.5 sm:px-2 py-0.5 bg-[#dedede] text-[#21242e] border border-[#3d4f97] text-[9px] sm:text-[10px] font-bold uppercase break-keep"
+                  variant="default"
+                  className="text-[9px] sm:text-[10px] bg-[#dedede] text-[#21242e] border-[#3d4f97]"
                 >
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
+
+            {/* SNS Quick Icon Bar */}
+            {snsLinks.length > 0 && (
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-2.5">
+                <span className="text-[9px] font-bold text-white/90 uppercase tracking-wider mr-0.5">
+                  SNS CONNECT:
+                </span>
+                {snsLinks.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={item.title}
+                    className="w-5 h-5 sm:w-6 sm:h-6 bg-[#dedede] hover:bg-[#ffffff] text-[#21242e] border border-[#3d4f97] rounded-[2px] flex items-center justify-center shadow-xs transition-transform hover:-translate-y-0.5"
+                  >
+                    {item.icon === "github" ? (
+                      <GithubSmallIcon />
+                    ) : item.icon === "linkedin" ? (
+                      <LinkedinSmallIcon />
+                    ) : item.icon === "mail" || item.icon === "send" ? (
+                      <Mail className="w-3 h-3 text-[#3d4f97]" />
+                    ) : item.icon === "blog" ? (
+                      <BookOpen className="w-3 h-3 text-[#3d4f97]" />
+                    ) : (
+                      <Globe className="w-3 h-3 text-[#3d4f97]" />
+                    )}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* 2. Control Strip: Signal Orange Arrow Buttons & Amber Info Chips */}
       <div className="w-full bg-[#9fbee7] border-x-2 border-b-2 border-[#3d4f97] px-2.5 sm:px-3 py-1.5 flex items-center justify-between gap-1.5 sm:gap-2 flex-wrap text-xs">
-        {/* Left: Player's Poll Stats */}
+        {/* Left: Player's Poll Stats & Status */}
         <div className="flex items-center gap-1.5">
-          <span className="px-1.5 sm:px-2 py-0.5 bg-[#ecab37] border border-[#3d4f97] text-[#21242e] text-[9px] sm:text-[10px] font-black uppercase">
+          <Badge variant="nintendoGold" className="text-[9px] sm:text-[10px]">
             VIEWS
-          </span>
+          </Badge>
           <span className="font-mono text-[11px] sm:text-xs font-bold text-[#21242e]">
-            {profile.stats?.views ?? 1280}
+            {(profile.stats?.views ?? 1280).toLocaleString()}
           </span>
+
+          {profile.statusMessage && (
+            <span className="hidden sm:inline-block text-[10px] text-[#21242e] font-bold ml-2">
+              • {profile.statusMessage}
+            </span>
+          )}
         </div>
 
         {/* Right: Signal Orange Action Buttons */}
         <div className="flex items-center gap-1.5">
           {/* Like / Cheer Button */}
-          <button
+          <Button
             onClick={handleLike}
-            className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase transition-all nintendo-chip rounded-[2px] cursor-pointer whitespace-nowrap ${
-              hasLiked
-                ? "bg-[#e60012] text-white"
-                : "bg-[#f68d1f] hover:bg-[#e48600] text-white"
-            }`}
+            variant={hasLiked ? "nintendoRed" : "nintendoOrange"}
+            size="sm"
+            className="text-[10px] sm:text-[11px]"
           >
             <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${hasLiked ? "fill-white" : ""}`} />
             <span>CHEER ({likesCount})</span>
-          </button>
+          </Button>
 
           {/* Share Button */}
-          <button
+          <Button
             onClick={onOpenShareModal}
-            className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-[#21242e] hover:bg-[#3d4f97] text-[#f68d1f] text-[10px] sm:text-[11px] font-bold uppercase nintendo-chip rounded-[2px] cursor-pointer whitespace-nowrap"
+            variant="nintendoCarbon"
+            size="sm"
+            className="text-[10px] sm:text-[11px]"
           >
             <Share2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span className="hidden xs:inline">SHARE</span>
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#f68d1f] text-white flex items-center justify-center shrink-0">
+            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#f68d1f] text-white flex items-center justify-center shrink-0 ml-0.5">
               <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
             </div>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function Header() {
   return (
@@ -48,9 +49,9 @@ export function Header() {
               <option>Systems</option>
             </select>
           </div>
-          <button className="px-2 py-0.5 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[10px] font-black uppercase nintendo-chip rounded-[2px] shadow-xs shrink-0 cursor-pointer">
+          <Button variant="nintendoGold" size="sm" className="h-6 px-2 text-[10px]">
             GO
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -77,12 +78,12 @@ export function Header() {
 
         {/* Right Amber Utility Chips */}
         <div className="flex items-center gap-1 shrink-0">
-          <button className="px-1.5 sm:px-2 py-0.5 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[9px] sm:text-[10px] font-bold uppercase nintendo-chip rounded-[2px] whitespace-nowrap cursor-pointer">
+          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px]">
             CODE BANK
-          </button>
-          <button className="px-1.5 sm:px-2 py-0.5 bg-[#ecab37] hover:bg-[#e48600] text-[#21242e] text-[9px] sm:text-[10px] font-bold uppercase nintendo-chip rounded-[2px] whitespace-nowrap cursor-pointer">
+          </Button>
+          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px]">
             FINDER
-          </button>
+          </Button>
         </div>
       </div>
 
