@@ -218,6 +218,7 @@ Phase 1 로컬 시연 및 테스트에 사용되는 기본 프로필(`INITIAL_PR
 | **Design System** | **2001 Nintendo Hardware Hub Style** | [Design.md](file:///c:/Users/logon/OneDrive/바탕%20화면/project/my-link-hy/Design.md)에 정의된 레트로 하드웨어 섀시, 베벨 및 실크스크린 라벨 시스템 |
 | **Icons** | **Lucide React** | 직관적이고 경량화된 UI 아이콘 세트 |
 | **Data Persistence** | **Browser LocalStorage** | 시연을 위한 무(無)서버 클라이언트 데이터 영속화 |
+| **Form & Validation** | **React Hook Form (RHF) + Zod** | 스키마 기반 실시간 폼 유효성 검증 및 타입 안전성 보장 |
 | **State Management** | **React State / Zustand** | 테마 전환, 카테고리 필터링, 모달 상태 제어 |
 | **Language** | **TypeScript 5** | 엄격한 타입 안정성 보장 |
 
