@@ -282,6 +282,8 @@ export function AddLinkDialog({
             </div>
             <button
               type="button"
+              aria-label="인기 링크 배지 토글"
+              data-testid="toggle-popular"
               onClick={() => setIsPopular(!isPopular)}
               className={`w-9 h-5 rounded-[2px] p-0.5 transition-colors cursor-pointer flex items-center ${
                 isPopular ? "bg-[#e60012] justify-end" : "bg-[#8ba1d4] justify-start"
