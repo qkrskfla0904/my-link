@@ -14,6 +14,7 @@ import {
   Sparkles,
   Link as LinkIcon,
   Check,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +30,13 @@ interface AddLinkDialogProps {
   onClose: () => void;
   onAddLink: (newLink: LinkItem) => void;
   existingCategories: string[];
+}
+
+interface FormErrors {
+  title?: string;
+  url?: string;
+  description?: string;
+  customCategory?: string;
 }
 
 const AVAILABLE_ICONS = [
@@ -47,6 +55,34 @@ const AVAILABLE_ICONS = [
 
 const DEFAULT_CATEGORIES = ["개발/코드", "포트폴리오", "블로그", "SNS", "연락처"];
 
+function validateUrl(rawUrl: string): boolean {
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return false;
+
+  // mailto check
+  if (trimmed.startsWith("mailto:")) {
+    const email = trimmed.replace("mailto:", "");
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  let toCheck = trimmed;
+  if (!toCheck.startsWith("http://") && !toCheck.startsWith("https://")) {
+    toCheck = `https://${toCheck}`;
+  }
+
+  try {
+    const parsed = new URL(toCheck);
+    return Boolean(
+      parsed.hostname &&
+      (parsed.hostname === "localhost" || parsed.hostname.includes(".")) &&
+      !parsed.hostname.startsWith(".") &&
+      !parsed.hostname.endsWith(".")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function AddLinkDialog({
   isOpen,
   onClose,
@@ -60,7 +96,9 @@ export function AddLinkDialog({
   const [customCategory, setCustomCategory] = useState("");
   const [icon, setIcon] = useState("globe");
   const [isPopular, setIsPopular] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const categories = Array.from(
     new Set([
@@ -69,14 +107,101 @@ export function AddLinkDialog({
     ])
   );
 
+  const validateField = (field: keyof FormErrors, value: string): string | undefined => {
+    switch (field) {
+      case "title": {
+        const t = value.trim();
+        if (!t) return "링크 제목을 입력해주세요.";
+        if (t.length < 2) return "제목은 최소 2글자 이상 입력해야 합니다.";
+        if (value.length > 50) return "제목은 최대 50자까지 입력 가능합니다.";
+        return undefined;
+      }
+      case "url": {
+        const u = value.trim();
+        if (!u) return "URL 주소를 입력해주세요.";
+        if (!validateUrl(u)) return "올바른 URL(예: https://example.com) 형식을 입력해주세요.";
+        if (value.length > 200) return "URL은 최대 200자까지 입력 가능합니다.";
+        return undefined;
+      }
+      case "description": {
+        if (value.length > 100) return "설명은 최대 100자까지 입력 가능합니다.";
+        return undefined;
+      }
+      case "customCategory": {
+        if (category === "__custom__") {
+          const c = value.trim();
+          if (!c) return "새 카테고리명을 입력해주세요.";
+          if (c.length > 20) return "카테고리명은 최대 20자까지 가능합니다.";
+        }
+        return undefined;
+      }
+    }
+  };
+
+  const handleBlur = (field: keyof FormErrors) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    let val = "";
+    if (field === "title") val = title;
+    else if (field === "url") val = url;
+    else if (field === "description") val = description;
+    else if (field === "customCategory") val = customCategory;
+
+    const error = validateField(field, val);
+    setErrors((prev) => ({ ...prev, [field]: error }));
+  };
+
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    if (touched.title) {
+      setErrors((prev) => ({ ...prev, title: validateField("title", val) }));
+    }
+  };
+
+  const handleUrlChange = (val: string) => {
+    setUrl(val);
+    if (touched.url) {
+      setErrors((prev) => ({ ...prev, url: validateField("url", val) }));
+    }
+  };
+
+  const handleDescriptionChange = (val: string) => {
+    setDescription(val);
+    if (touched.description) {
+      setErrors((prev) => ({ ...prev, description: validateField("description", val) }));
+    }
+  };
+
+  const handleCustomCategoryChange = (val: string) => {
+    setCustomCategory(val);
+    if (touched.customCategory) {
+      setErrors((prev) => ({ ...prev, customCategory: validateField("customCategory", val) }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setErrorMessage("링크 제목을 입력해주세요.");
-      return;
-    }
-    if (!url.trim()) {
-      setErrorMessage("URL 주소를 입력해주세요.");
+
+    const titleError = validateField("title", title);
+    const urlError = validateField("url", url);
+    const descError = validateField("description", description);
+    const catError = category === "__custom__" ? validateField("customCategory", customCategory) : undefined;
+
+    const newErrors: FormErrors = {
+      title: titleError,
+      url: urlError,
+      description: descError,
+      customCategory: catError,
+    };
+
+    setErrors(newErrors);
+    setTouched({
+      title: true,
+      url: true,
+      description: true,
+      customCategory: true,
+    });
+
+    if (titleError || urlError || descError || catError) {
       return;
     }
 
@@ -116,9 +241,12 @@ export function AddLinkDialog({
     setCustomCategory("");
     setIcon("globe");
     setIsPopular(false);
-    setErrorMessage("");
+    setErrors({});
+    setTouched({});
     onClose();
   };
+
+  const hasAnyError = Boolean(errors.title || errors.url || errors.description || errors.customCategory);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -132,66 +260,107 @@ export function AddLinkDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-3.5 sm:p-4 space-y-3">
-          {errorMessage && (
-            <div className="p-1.5 bg-[#e60012] text-white text-[10px] font-bold rounded-[2px] shadow-xs">
-              ⚠️ {errorMessage}
+          {/* Global Error Banner */}
+          {hasAnyError && (
+            <div className="p-2 bg-[#e60012] text-white text-[10px] font-bold rounded-[2px] shadow-xs flex items-center gap-1.5 animate-in fade-in-50">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>입력 항목을 확인해주세요. 유효하지 않은 값이 포함되어 있습니다.</span>
             </div>
           )}
 
           {/* 1. Title Input */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-[#21242e] flex items-center justify-between">
-              <span>LINK TITLE (제목)*:</span>
-              <span className="text-[#3d4f97] text-[9px]">REQUIRED</span>
-            </label>
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
+              <label htmlFor="link-title">LINK TITLE (제목)*</label>
+              <div className="flex items-center gap-2">
+                <span className="text-[#3d4f97] text-[9px]">REQUIRED</span>
+                <span className={`font-mono text-[9px] ${title.length > 50 ? "text-[#e60012] font-black" : "text-[#60619c]"}`}>
+                  {title.length}/50
+                </span>
+              </div>
+            </div>
             <input
+              id="link-title"
               type="text"
-              required
               placeholder="예: 최신 프로젝트 데모 사이트"
               value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (errorMessage) setErrorMessage("");
-              }}
-              className="w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px]"
+              maxLength={60}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              onBlur={() => handleBlur("title")}
+              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
+                errors.title && touched.title ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
+              }`}
             />
+            {errors.title && touched.title && (
+              <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
+                <span>⚠️ {errors.title}</span>
+              </p>
+            )}
           </div>
 
           {/* 2. URL Input */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-[#21242e] flex items-center justify-between">
-              <span>TARGET URL (주소)*:</span>
-              <span className="text-[#3d4f97] text-[9px]">HTTPS://</span>
-            </label>
-            <div className="flex items-center bg-white nintendo-inset px-2 py-1 rounded-[2px]">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
+              <label htmlFor="link-url">TARGET URL (주소)*</label>
+              <div className="flex items-center gap-2">
+                <span className="text-[#3d4f97] text-[9px]">HTTPS://</span>
+                <span className={`font-mono text-[9px] ${url.length > 200 ? "text-[#e60012] font-black" : "text-[#60619c]"}`}>
+                  {url.length}/200
+                </span>
+              </div>
+            </div>
+            <div
+              className={`flex items-center bg-white nintendo-inset px-2 py-1 rounded-[2px] transition-colors ${
+                errors.url && touched.url ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
+              }`}
+            >
               <LinkIcon className="w-3 h-3 text-[#3d4f97] mr-1.5 shrink-0" />
               <input
+                id="link-url"
                 type="text"
-                required
                 placeholder="https://example.com"
                 value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value);
-                  if (errorMessage) setErrorMessage("");
-                }}
+                maxLength={220}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                onBlur={() => handleBlur("url")}
                 className="w-full text-[11px] text-[#21242e] font-mono outline-none bg-transparent"
               />
             </div>
+            {errors.url && touched.url && (
+              <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
+                <span>⚠️ {errors.url}</span>
+              </p>
+            )}
           </div>
 
           {/* 3. Description Input */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-[#21242e] flex items-center justify-between">
-              <span>DESCRIPTION (설명):</span>
-              <span className="text-[#60619c] text-[9px]">OPTIONAL</span>
-            </label>
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
+              <label htmlFor="link-desc">DESCRIPTION (설명)</label>
+              <div className="flex items-center gap-2">
+                <span className="text-[#60619c] text-[9px]">OPTIONAL</span>
+                <span className={`font-mono text-[9px] ${description.length > 100 ? "text-[#e60012] font-black" : "text-[#60619c]"}`}>
+                  {description.length}/100
+                </span>
+              </div>
+            </div>
             <input
+              id="link-desc"
               type="text"
-              placeholder="링크에 대한 한 줄 소개 문구를 적어주세요"
+              placeholder="링크에 대한 한 줄 소개 문구를 적어주세요 (최대 100자)"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px]"
+              maxLength={120}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              onBlur={() => handleBlur("description")}
+              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
+                errors.description && touched.description ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
+              }`}
             />
+            {errors.description && touched.description && (
+              <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
+                <span>⚠️ {errors.description}</span>
+              </p>
+            )}
           </div>
 
           {/* 4. Category Selector */}
@@ -206,7 +375,10 @@ export function AddLinkDialog({
                   <button
                     key={cat}
                     type="button"
-                    onClick={() => setCategory(cat)}
+                    onClick={() => {
+                      setCategory(cat);
+                      setErrors((prev) => ({ ...prev, customCategory: undefined }));
+                    }}
                     className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-[2px] cursor-pointer transition-all ${
                       isSelected
                         ? "bg-[#21242e] text-[#f68d1f] nintendo-chip border border-[#f68d1f]"
@@ -230,13 +402,24 @@ export function AddLinkDialog({
               </button>
             </div>
             {category === "__custom__" && (
-              <input
-                type="text"
-                placeholder="새로운 카테고리명을 입력하세요"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                className="w-full mt-1 px-2 py-0.5 bg-white nintendo-inset text-[10px] text-[#21242e] font-medium outline-none rounded-[2px]"
-              />
+              <div className="space-y-0.5">
+                <input
+                  type="text"
+                  placeholder="새로운 카테고리명을 입력하세요 (최대 20자)"
+                  value={customCategory}
+                  maxLength={25}
+                  onChange={(e) => handleCustomCategoryChange(e.target.value)}
+                  onBlur={() => handleBlur("customCategory")}
+                  className={`w-full mt-1 px-2 py-0.5 bg-white nintendo-inset text-[10px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
+                    errors.customCategory && touched.customCategory ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
+                  }`}
+                />
+                {errors.customCategory && touched.customCategory && (
+                  <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1">
+                    <span>⚠️ {errors.customCategory}</span>
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
