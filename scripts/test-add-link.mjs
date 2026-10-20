@@ -1,7 +1,29 @@
 import { execSync } from "node:child_process";
+import fs from "node:fs";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 
 const PORT = 9222;
 const TARGET_URL = "http://localhost:3000";
+
+// Load Firebase Config from .env.local
+const envContent = fs.readFileSync(".env.local", "utf8");
+const envVars = {};
+envContent.split("\n").forEach((line) => {
+  const [k, ...v] = line.trim().split("=");
+  if (k && v.length) envVars[k] = v.join("=");
+});
+
+const firebaseApp = initializeApp({
+  apiKey: envVars["NEXT_PUBLIC_FIREBASE_API_KEY"],
+  authDomain: envVars["NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"],
+  projectId: envVars["NEXT_PUBLIC_FIREBASE_PROJECT_ID"],
+  storageBucket: envVars["NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"],
+  messagingSenderId: envVars["NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"],
+  appId: envVars["NEXT_PUBLIC_FIREBASE_APP_ID"],
+  measurementId: envVars["NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"],
+});
+const db = getFirestore(firebaseApp);
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -293,8 +315,32 @@ async function runBrowserTest() {
     console.log(`   -> Button state before click: "${copyResult?.before}"`);
     console.log(`   -> Button state after click: "${afterCopy}" (OK 체크 피드백) ✅`);
 
+    // Step 10: Verify Firestore Database (users/anonymous/links)
+    console.log(`🔥 [STEP 10] Verifying Firestore collection 'users/anonymous/links'...`);
+    await sleep(1500); // Wait for async Firestore write to settle
+    const colRef = collection(db, "users", "anonymous", "links");
+    const firestoreSnap = await getDocs(colRef);
+    const firestoreLinks = firestoreSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const savedFirestoreLink = firestoreLinks.find((l) =>
+      l.title && l.title.includes("닌텐도 레트로 에뮬레이터")
+    );
+
+    console.log(`   -> Total Docs in 'users/anonymous/links': ${firestoreSnap.size}`);
+    console.log(`   -> Found in Firestore: ${savedFirestoreLink ? "YES ✅" : "NO ❌"}`);
+    if (!savedFirestoreLink) {
+      throw new Error("Newly added link was NOT found in Firestore users/anonymous/links collection!");
+    }
+    console.log(`   -> Firestore Doc ID: "${savedFirestoreLink.id}" ✅`);
+    console.log(`   -> Firestore Stored URL: "${savedFirestoreLink.url}" ✅`);
+    console.log(`   -> Firestore Category: "${savedFirestoreLink.category}" ✅`);
+
+    // Clean up created test document from Firestore
+    console.log(`🧹 Cleaning up test document from Firestore...`);
+    await deleteDoc(doc(colRef, savedFirestoreLink.id));
+    console.log(`   -> Test document removed from Firestore ✅`);
+
     console.log("\n========================================================");
-    console.log("🎉 [SUCCESS] All 9 browser automation verification steps passed!");
+    console.log("🎉 [SUCCESS] All 10 browser automation & Firestore verification steps passed!");
     console.log("========================================================");
   } finally {
     ws.close();

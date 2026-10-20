@@ -15,6 +15,7 @@ import {
   Send,
   Sparkles,
   MousePointerClick,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ interface LinkCardProps {
   link: LinkItem;
   theme?: ThemeAccent;
   onLinkClick?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 function GithubIcon() {
@@ -93,37 +95,37 @@ function TwitterIcon() {
   );
 }
 
-const getIcon = (iconName?: string) => {
+function LinkIconRenderer({ iconName }: { iconName?: string }) {
   switch (iconName) {
     case "github":
-      return GithubIcon;
+      return <GithubIcon />;
     case "project":
-      return Sparkles;
+      return <Sparkles className="w-3.5 h-3.5" />;
     case "blog":
-      return BookOpen;
+      return <BookOpen className="w-3.5 h-3.5" />;
     case "resume":
-      return FileText;
+      return <FileText className="w-3.5 h-3.5" />;
     case "code":
-      return Code2;
+      return <Code2 className="w-3.5 h-3.5" />;
     case "linkedin":
-      return LinkedinIcon;
+      return <LinkedinIcon />;
     case "youtube":
-      return YoutubeIcon;
+      return <YoutubeIcon />;
     case "twitter":
-      return TwitterIcon;
+      return <TwitterIcon />;
     case "mail":
-      return Mail;
+      return <Mail className="w-3.5 h-3.5" />;
     case "send":
-      return Send;
+      return <Send className="w-3.5 h-3.5" />;
     case "globe":
     default:
-      return Globe;
+      return <Globe className="w-3.5 h-3.5" />;
   }
-};
+}
 
-export function LinkCard({ link, onLinkClick }: LinkCardProps) {
+export function LinkCard({ link, onLinkClick, onDelete }: LinkCardProps) {
   const [copied, setCopied] = useState(false);
-  const IconComponent = getIcon(link.icon);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCopy = (e: React.MouseEvent) => {
     if (link.url === "#") return;
@@ -134,6 +136,20 @@ export function LinkCard({ link, onLinkClick }: LinkCardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!onDelete) return;
+    if (window.confirm(`'${link.title}' 링크를 삭제하시겠습니까?`)) {
+      setIsDeleting(true);
+      try {
+        await onDelete(link.id);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   const handleClick = () => {
     if (onLinkClick) {
       onLinkClick(link.id);
@@ -141,19 +157,19 @@ export function LinkCard({ link, onLinkClick }: LinkCardProps) {
   };
 
   return (
-    <a
-      href={link.url}
-      target={link.url.startsWith("http") ? "_blank" : "_self"}
-      rel="noopener noreferrer"
-      onClick={handleClick}
-      className="group relative block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2 sm:p-2.5 transition-all duration-150 shadow-xs rounded-[2px]"
-    >
+    <div className="relative group block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2 sm:p-2.5 transition-all duration-150 shadow-xs rounded-[2px]">
       <div className="flex items-center justify-between gap-2">
         {/* Left: Icon & Headline Info */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        <a
+          href={link.url}
+          target={link.url.startsWith("http") ? "_blank" : "_self"}
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+        >
           {/* Beveled Icon Box */}
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#8ba1d4] nintendo-plate flex items-center justify-center text-[#21242e] shrink-0">
-            <IconComponent />
+            <LinkIconRenderer iconName={link.icon} />
           </div>
 
           <div className="flex flex-col min-w-0 flex-1">
@@ -194,15 +210,15 @@ export function LinkCard({ link, onLinkClick }: LinkCardProps) {
               </div>
             )}
           </div>
-        </div>
+        </a>
 
-        {/* Right: Copy Button & Signal-Orange Chevron Chip */}
+        {/* Right: Actions (Copy, Delete, Arrow) */}
         <div className="flex items-center gap-1 shrink-0 ml-0.5">
           {link.url !== "#" && (
             <Button
               type="button"
               onClick={handleCopy}
-              title="Copy URL"
+              title="URL 복사"
               variant="nintendoGold"
               size="sm"
               className="h-5 sm:h-6 px-1.5 py-0 text-[8px] sm:text-[9px]"
@@ -221,12 +237,30 @@ export function LinkCard({ link, onLinkClick }: LinkCardProps) {
             </Button>
           )}
 
+          {onDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title="링크 삭제"
+              className="w-5 h-5 sm:w-6 sm:h-6 bg-[#dedede] hover:bg-[#e60012] hover:text-white text-[#60619c] border border-[#3d4f97] flex items-center justify-center rounded-[2px] transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </button>
+          )}
+
           {/* Button-Arrow-Chip: Signal Orange Chip */}
-          <div className="w-4 h-4 sm:w-5 sm:h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs shrink-0 rounded-[2px]">
+          <a
+            href={link.url}
+            target={link.url.startsWith("http") ? "_blank" : "_self"}
+            rel="noopener noreferrer"
+            onClick={handleClick}
+            className="w-4 h-4 sm:w-5 sm:h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs shrink-0 rounded-[2px]"
+          >
             <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
-          </div>
+          </a>
         </div>
       </div>
-    </a>
+    </div>
   );
 }

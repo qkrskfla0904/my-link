@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +18,7 @@ import {
   Link as LinkIcon,
   Check,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 interface AddLinkDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddLink: (newLink: LinkItem) => void;
+  onAddLink: (newLink: LinkItem) => Promise<void> | void;
   existingCategories: string[];
 }
 
@@ -158,8 +160,10 @@ export function AddLinkDialog({
   const currentCategory = watch("category");
   const currentIcon = watch("icon");
   const currentIsPopular = watch("isPopular");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const onSubmit = (data: AddLinkFormValues) => {
+  const onSubmit = async (data: AddLinkFormValues) => {
     let finalUrl = data.url.trim();
     if (
       !finalUrl.startsWith("http://") &&
@@ -186,12 +190,25 @@ export function AddLinkDialog({
       clickCount: 0,
     };
 
-    onAddLink(newLink);
-    reset();
-    onClose();
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+      await onAddLink(newLink);
+      reset();
+      onClose();
+    } catch (err: unknown) {
+      console.error("Failed to add link:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "링크 저장 중 오류가 발생했습니다. 다시 시도해주세요.";
+      setSubmitError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleModalClose = () => {
+    if (isSubmitting) return; // Prevent closing while saving
+    setSubmitError(null);
     reset();
     onClose();
   };
@@ -212,6 +229,14 @@ export function AddLinkDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-3.5 sm:p-4 space-y-3">
+          {/* Submit Error Banner */}
+          {submitError && (
+            <div className="p-2 bg-[#e60012] text-white text-[10px] font-bold rounded-[2px] shadow-xs flex items-center gap-1.5 animate-in fade-in-50">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          )}
+
           {/* Global Error Banner */}
           {hasAnyError && (
             <div className="p-2 bg-[#e60012] text-white text-[10px] font-bold rounded-[2px] shadow-xs flex items-center gap-1.5 animate-in fade-in-50">
@@ -438,6 +463,7 @@ export function AddLinkDialog({
               variant="nintendoPlate"
               size="sm"
               onClick={handleModalClose}
+              disabled={isSubmitting}
               className="text-[10px]"
             >
               CANCEL (취소)
@@ -446,10 +472,20 @@ export function AddLinkDialog({
               type="submit"
               variant="nintendoOrange"
               size="sm"
+              disabled={isSubmitting}
               className="text-[10px] font-black"
             >
-              <Check className="w-3 h-3 stroke-[3]" />
-              INSERT LINK (추가)
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>SAVING...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  <span>INSERT LINK (추가)</span>
+                </>
+              )}
             </Button>
           </div>
         </form>
