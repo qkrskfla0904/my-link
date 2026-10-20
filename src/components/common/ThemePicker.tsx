@@ -10,11 +10,11 @@ interface ThemePickerProps {
 }
 
 const MODES: { id: ThemeAccent; name: string; color: string; label: string; hex: string }[] = [
-  { id: "violet", name: "HOME", color: "bg-[#acace7]", hex: "#acace7", label: "LAVENDER" },
-  { id: "emerald", name: "SYS", color: "bg-[#206479]", hex: "#206479", label: "TEAL" },
-  { id: "rose", name: "GAME", color: "bg-[#a7282b]", hex: "#a7282b", label: "RED" },
-  { id: "sky", name: "NEWS", color: "bg-[#c0d5e6]", hex: "#c0d5e6", label: "ICE" },
-  { id: "amber", name: "CLASSIC", color: "bg-[#ecab37]", hex: "#ecab37", label: "GOLD" },
+  { id: "violet", name: "라벤더", color: "bg-[#acace7]", hex: "#acace7", label: "바이올렛" },
+  { id: "emerald", name: "시스템", color: "bg-[#206479]", hex: "#206479", label: "에메랄드" },
+  { id: "rose", name: "게임레드", color: "bg-[#a7282b]", hex: "#a7282b", label: "로즈레드" },
+  { id: "sky", name: "아이스", color: "bg-[#c0d5e6]", hex: "#c0d5e6", label: "스카이블루" },
+  { id: "amber", name: "골드", color: "bg-[#ecab37]", hex: "#ecab37", label: "앰버골드" },
 ];
 
 export function ThemePicker({ currentTheme, onSelectTheme }: ThemePickerProps) {
@@ -29,7 +29,7 @@ export function ThemePicker({ currentTheme, onSelectTheme }: ThemePickerProps) {
             className="w-2 h-2 rounded-full border border-[#21242e] shadow-xs animate-pulse"
             style={{ backgroundColor: currentMode.hex }}
           />
-          <span className="tracking-wider">COLOR:</span>
+          <span className="tracking-wider">선택 색상:</span>
         </div>
         <span className="font-mono text-[#3d4f97] font-bold">
           {currentMode.label}

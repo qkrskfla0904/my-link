@@ -282,14 +282,14 @@ export default function HomePage() {
             <div className="flex items-center gap-1.5 flex-wrap">
               <div className="w-2 h-2 bg-[#f68d1f]" />
               <h2 className="text-xs font-bold uppercase tracking-[0.5px] text-[#21242e]">
-                OFFICIAL LINKS & DIRECTORY
+                공식 링크 목록 & 디렉토리
               </h2>
 
               {/* Status Badge: Active / Updating / Connecting */}
               {isUpdating ? (
                 <span className="inline-flex items-center gap-1 text-[8px] font-mono font-bold bg-[#21242e] text-[#f68d1f] px-1.5 py-0.5 rounded-[2px] animate-pulse">
                   <Loader2 className="w-2.5 h-2.5 animate-spin text-[#f68d1f]" />
-                  UPDATING...
+                  갱신 중...
                 </span>
               ) : isFirestoreConnected ? (
                 <span
@@ -297,12 +297,12 @@ export default function HomePage() {
                   className="inline-flex items-center gap-1 text-[8px] font-mono font-bold bg-[#21242e] text-[#10b981] px-1.5 py-0.5 rounded-[2px]"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                  FIRESTORE (최신순)
+                  FIRESTORE (연결됨)
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[8px] font-mono font-bold bg-[#21242e] text-[#ecab37] px-1.5 py-0.5 rounded-[2px]">
                   <Database className="w-2.5 h-2.5 animate-spin" />
-                  CONNECTING...
+                  연결 중...
                 </span>
               )}
             </div>
@@ -335,7 +335,7 @@ export default function HomePage() {
                 className="h-6 px-2 text-[9px] sm:text-[10px] font-black tracking-wider"
               >
                 <Plus className="w-3 h-3 stroke-[3]" />
-                <span>ADD LINK</span>
+                <span>링크 추가</span>
               </Button>
 
               {/* Quick in-directory search input */}
@@ -343,7 +343,7 @@ export default function HomePage() {
                 <Search className="w-2.5 h-2.5 text-[#3d4f97] shrink-0" />
                 <input
                   type="text"
-                  placeholder="Filter..."
+                  placeholder="검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-16 sm:w-24 text-[9px] sm:text-[10px] text-[#21242e] font-medium outline-none bg-transparent"
@@ -359,7 +359,7 @@ export default function HomePage() {
               </div>
 
               <span className="text-[10px] font-bold text-[#3d4f97]">
-                {filteredLinks.length} ITEMS
+                {filteredLinks.length}개 링크
               </span>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function HomePage() {
                 <span>{updateMessage}</span>
               </div>
               <span className="text-[9px] font-mono text-[#f68d1f] font-black uppercase tracking-wider">
-                REFRESHING...
+                새로고침 중...
               </span>
             </div>
           )}
@@ -450,9 +450,9 @@ export default function HomePage() {
                       }}
                       variant="nintendoPlate"
                       size="sm"
-                      className="text-[10px]"
+                      className="text-[10px] font-bold"
                     >
-                      RESET FILTER
+                      필터 초기화
                     </Button>
                   )}
                   <Button
@@ -462,7 +462,7 @@ export default function HomePage() {
                     className="text-[10px] font-black"
                   >
                     <Plus className="w-3 h-3 stroke-[3]" />
-                    ADD NEW LINK
+                    새 링크 추가
                   </Button>
                   {profile.links.length === 0 && (
                     <Button
@@ -497,7 +497,7 @@ export default function HomePage() {
           <div className="space-y-1">
             <div className="bg-[#21242e] text-[#ecab37] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-[#ecab37]" />
-              <span>CHASSIS DISPLAY MODE</span>
+              <span>테마 모드 설정</span>
             </div>
             <ThemePicker currentTheme={theme} onSelectTheme={handleThemeChange} />
           </div>
@@ -506,9 +506,9 @@ export default function HomePage() {
           <Card variant="whitePlate" className="p-3 space-y-1.5">
             <div className="flex items-center justify-between">
               <Badge variant="nintendoCarbon" className="text-[9px]">
-                FIRESTORE DIRECTORY
+                FIRESTORE 디렉토리
               </Badge>
-              <span className="text-[9px] font-mono text-[#10b981] font-bold">CONNECTED</span>
+              <span className="text-[9px] font-mono text-[#10b981] font-bold">연결됨</span>
             </div>
             <p className="text-[10px] text-[#21242e] font-medium leading-relaxed">
               • 컬렉션: <code className="bg-[#dedede] px-1 py-0.5 rounded-[2px] font-mono text-[9px] text-[#3d4f97]">users/anonymous/links</code>
@@ -523,11 +523,11 @@ export default function HomePage() {
           <Card variant="whitePlate" className="p-3 space-y-2">
             <div className="inline-block">
               <Badge variant="nintendoGold" className="text-[9px]">
-                WHAT IS — MYLINK HUB
+                마이링크(MYLINK) 안내
               </Badge>
             </div>
             <p className="text-xs leading-relaxed text-[#21242e]">
-              A complete centralized console hardware interface connecting all developer repositories, technical writings, and professional social profiles.
+              개발 프로젝트 저장소, 기술 블로그 및 소셜 프로필을 한곳에서 모아볼 수 있는 올인원 링크 허브입니다.
             </p>
           </Card>
 
@@ -536,7 +536,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between border-b border-[#3d4f97] pb-1">
               <span className="text-[11px] font-black uppercase text-[#21242e] flex items-center gap-1">
                 <RadioIcon className="w-3.5 h-3.5 text-[#f68d1f]" />
-                PLAYER&apos;S POLL
+                방문자 미니 투표
               </span>
               <span className="text-[9px] font-bold text-[#3d4f97]">
                 ISSUE #01
@@ -544,7 +544,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-[11px] font-bold text-[#21242e]">
-              Which stack do you prefer for 2001-era hardware web UIs?
+              2000년대 레트로 웹 감성 UI를 구현할 때 가장 선호하는 스택은?
             </p>
 
             <RadioGroup value={pollVote} onValueChange={setPollVote} className="gap-1.5 py-1">
@@ -569,7 +569,7 @@ export default function HomePage() {
               size="sm"
               className="w-full text-[10px] font-black"
             >
-              {pollSubmitted ? "VOTE RECORDED! ✓" : "SUBMIT VOTE"}
+              {pollSubmitted ? "투표 완료! ✓" : "투표하기"}
               <ChevronRight className="w-3 h-3 stroke-[3]" />
             </Button>
           </Card>
@@ -578,10 +578,10 @@ export default function HomePage() {
           <Card variant="darkInset" className="p-2.5 text-center space-y-1">
             <div className="flex items-center justify-center gap-1 text-[#f68d1f] text-[10px] font-black uppercase">
               <Award className="w-3.5 h-3.5" />
-              <span>NINTENDO POWER VERIFIED</span>
+              <span>닌텐도 스타일 인증</span>
             </div>
             <p className="text-[9px] text-[#9fbee7] font-mono">
-              COMPATIBLE WITH GAME BOY ADVANCE & N64 EXPANSION PAK
+              반응형 모바일 및 모든 데스크톱 브라우저 최적화 지원
             </p>
           </Card>
         </div>

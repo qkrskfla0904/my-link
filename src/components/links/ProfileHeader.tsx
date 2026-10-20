@@ -93,7 +93,7 @@ export function ProfileHeader({
               <div className="absolute -bottom-1 -right-1">
                 <Badge variant="nintendoOnline" className="text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-ping shrink-0" />
-                  ONLINE
+                  온라인
                 </Badge>
               </div>
             )}
@@ -105,13 +105,13 @@ export function ProfileHeader({
             <div className="mb-1 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
               <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px]">
                 <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#f68d1f] shrink-0" />
-                <span>NINTENDO DEV HUB</span>
+                <span>개발자 프로필 허브</span>
               </Badge>
 
               {profile.isAvailableForHire && (
                 <Badge variant="nintendoGold" className="text-[8px] sm:text-[9px] flex items-center gap-1">
                   <Coffee className="w-2.5 h-2.5" />
-                  <span>Available for Hire</span>
+                  <span>구직/커피챗 가능</span>
                 </Badge>
               )}
             </div>
@@ -137,7 +137,7 @@ export function ProfileHeader({
             <div className="flex items-center justify-center sm:justify-start gap-1 mt-2 flex-wrap">
               {(profile.tags && profile.tags.length > 0
                 ? profile.tags
-                : ["💻 FRONTEND", "🚀 NEXT.JS & REACT"]
+                : ["💻 프론트엔드", "🚀 NEXT.JS & REACT"]
               ).map((tag, idx) => (
                 <Badge
                   key={idx}
@@ -153,7 +153,7 @@ export function ProfileHeader({
             {snsLinks.length > 0 && (
               <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-2.5">
                 <span className="text-[9px] font-bold text-white/90 uppercase tracking-wider mr-0.5">
-                  SNS CONNECT:
+                  소셜 링크:
                 </span>
                 {snsLinks.map((item) => (
                   <a
@@ -188,7 +188,7 @@ export function ProfileHeader({
         {/* Left: Player's Poll Stats & Status */}
         <div className="flex items-center gap-1.5">
           <Badge variant="nintendoGold" className="text-[9px] sm:text-[10px]">
-            VIEWS
+            조회수
           </Badge>
           <span className="font-mono text-[11px] sm:text-xs font-bold text-[#21242e]">
             {(profile.stats?.views ?? 1280).toLocaleString()}
@@ -208,10 +208,10 @@ export function ProfileHeader({
             onClick={handleLike}
             variant={hasLiked ? "nintendoRed" : "nintendoOrange"}
             size="sm"
-            className="text-[10px] sm:text-[11px]"
+            className="text-[10px] sm:text-[11px] font-bold"
           >
             <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${hasLiked ? "fill-white" : ""}`} />
-            <span>CHEER ({likesCount})</span>
+            <span>응원하기 ({likesCount})</span>
           </Button>
 
           {/* Share Button */}
@@ -219,10 +219,10 @@ export function ProfileHeader({
             onClick={onOpenShareModal}
             variant="nintendoCarbon"
             size="sm"
-            className="text-[10px] sm:text-[11px]"
+            className="text-[10px] sm:text-[11px] font-bold"
           >
             <Share2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden xs:inline">SHARE</span>
+            <span className="hidden xs:inline">공유</span>
             <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#f68d1f] text-white flex items-center justify-center shrink-0 ml-0.5">
               <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
             </div>

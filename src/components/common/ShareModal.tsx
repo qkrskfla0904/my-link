@@ -38,7 +38,7 @@ export function ShareModal({ isOpen, onClose, profile }: ShareModalProps) {
         <DialogHeader>
           <div className="flex items-center gap-1.5">
             <Share2 className="w-3.5 h-3.5 text-[#f68d1f]" />
-            <DialogTitle>NINTENDO SHARE MODULE</DialogTitle>
+            <DialogTitle>프로필 및 링크 공유하기</DialogTitle>
           </div>
         </DialogHeader>
 
@@ -49,14 +49,14 @@ export function ShareModal({ isOpen, onClose, profile }: ShareModalProps) {
               <QrCode className="w-20 h-20 text-[#21242e]" />
             </div>
             <p className="text-[10px] font-bold text-[#21242e] uppercase tracking-wider">
-              SCAN CODE WITH YOUR HARDWARE DEVICE
+              스마트폰 카메라로 QR 코드를 스캔하세요
             </p>
           </div>
 
           {/* URL Input & Signal-Orange Submit / Copy Button */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase text-[#21242e]">
-              SYSTEM LINK ADDRESS:
+              내 마이링크 웹 주소:
             </label>
             <div className="flex items-center gap-1">
               <input
@@ -69,17 +69,17 @@ export function ShareModal({ isOpen, onClose, profile }: ShareModalProps) {
                 onClick={handleCopy}
                 variant="nintendoOrange"
                 size="sm"
-                className="h-7 text-[10px] sm:text-[11px] shrink-0"
+                className="h-7 text-[10px] sm:text-[11px] shrink-0 font-bold"
               >
                 {copied ? (
                   <>
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>COPIED</span>
+                    <span>복사 완료!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>SUBMIT</span>
+                    <span>주소 복사</span>
                   </>
                 )}
               </Button>

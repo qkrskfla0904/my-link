@@ -17,7 +17,7 @@ export function Header() {
               M
             </div>
             <div className="relative px-1.5 sm:px-2 py-0.5 bg-white border border-[#3d4f97] rounded-[4px] text-[9px] sm:text-[10px] font-bold text-[#21242e] shadow-xs whitespace-nowrap">
-              Welcome to MyLink!
+              마이링크에 오신 것을 환영합니다!
               {/* Bubble tail */}
               <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-0 h-0 border-t-[3px] border-t-transparent border-r-[4px] border-r-white border-b-[3px] border-b-transparent" />
             </div>
@@ -40,17 +40,17 @@ export function Header() {
             <Search className="w-3 h-3 text-[#3d4f97] mr-1 shrink-0" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="검색..."
               className="w-full sm:w-28 text-[10px] sm:text-[11px] font-medium text-[#21242e] outline-none bg-transparent min-w-0"
             />
             <select className="text-[9px] sm:text-[10px] font-bold text-[#3d4f97] bg-transparent border-l border-[#dedede] pl-1 outline-none shrink-0">
-              <option>All</option>
-              <option>Games</option>
-              <option>Systems</option>
+              <option>전체</option>
+              <option>게임</option>
+              <option>시스템</option>
             </select>
           </div>
-          <Button variant="nintendoGold" size="sm" className="h-6 px-2 text-[10px]">
-            GO
+          <Button variant="nintendoGold" size="sm" className="h-6 px-2 text-[10px] font-bold">
+            검색
           </Button>
         </div>
       </div>
@@ -78,30 +78,30 @@ export function Header() {
 
         {/* Right Amber Utility Chips */}
         <div className="flex items-center gap-1 shrink-0">
-          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px]">
-            CODE BANK
+          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px] font-bold">
+            코드 저장소
           </Button>
-          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px]">
-            FINDER
+          <Button variant="nintendoGold" size="sm" className="h-5 px-1.5 sm:px-2 text-[9px] sm:text-[10px] font-bold">
+            링크 찾기
           </Button>
         </div>
       </div>
 
       {/* 3. Secondary Subnav Strip: Pale Sky */}
       <div className="w-full bg-[#9fbee7] border-b-2 border-[#3d4f97] px-2.5 sm:px-3 py-1 flex items-center gap-2 sm:gap-3 overflow-x-auto text-[9px] sm:text-[10px] font-bold text-[#21242e] uppercase tracking-wider whitespace-nowrap no-scrollbar">
-        <span>PARENTS</span>
+        <span>학부모 안내</span>
         <span className="text-[#60619c]">|</span>
-        <span>CUSTOMER SERVICE</span>
+        <span>고객지원</span>
         <span className="text-[#60619c]">|</span>
-        <span>CORPORATE</span>
+        <span>기업정보</span>
         <span className="text-[#60619c]">|</span>
-        <span>GLOBAL</span>
+        <span>글로벌</span>
         <span className="text-[#60619c]">|</span>
-        <span>PRIVACY</span>
+        <span>개인정보처리방침</span>
         <span className="text-[#60619c]">|</span>
-        <span>STORE</span>
+        <span>스토어</span>
         <span className="text-[#60619c]">|</span>
-        <span>CONTACT</span>
+        <span>문의하기</span>
       </div>
     </header>
   );
