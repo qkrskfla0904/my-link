@@ -8,6 +8,7 @@ export interface LinkItem {
   isActive?: boolean;
   clickCount?: number;
   createdAt?: string;
+  updatedAt?: string;
   isPopular?: boolean;
 }
 

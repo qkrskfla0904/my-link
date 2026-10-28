@@ -328,6 +328,17 @@ async function runEditLinkTest() {
       throw new Error("Link list did not refresh with the updated title!");
     }
 
+    // Verify that '수정:' (updatedAt) text is rendered on the screen
+    console.log("🕒 [STEP 6.1] Verifying that 'updatedAt' timestamp is displayed on screen...");
+    const hasUpdatedAtText = await evaluate(`(() => {
+      const updatedAtEls = Array.from(document.querySelectorAll('[data-testid="link-updated-at"]'));
+      return updatedAtEls.some(el => el.textContent.includes('수정:'));
+    })()`);
+    console.log(`   -> Screen displayed 'updatedAt' timestamp: ${hasUpdatedAtText ? "PASS ✅" : "FAIL ❌"}`);
+    if (!hasUpdatedAtText) {
+      throw new Error("Updated at timestamp not rendered on the link card!");
+    }
+
     // Step 7: Verify directly in Firestore collection users/anonymous/links
     console.log("🔥 [STEP 7] Verifying updated link directly in Firestore collection 'users/anonymous/links'...");
     const snapshot = await getDocs(colRef);

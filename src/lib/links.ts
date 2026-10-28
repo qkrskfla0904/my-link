@@ -44,6 +44,7 @@ export function cleanLinkData(data: Partial<LinkItem>): Record<string, unknown> 
   if (data.isActive !== undefined) cleaned.isActive = data.isActive;
   if (data.isPopular !== undefined) cleaned.isPopular = data.isPopular;
   if (data.clickCount !== undefined) cleaned.clickCount = data.clickCount;
+  if (data.updatedAt !== undefined) cleaned.updatedAt = data.updatedAt;
 
   return cleaned;
 }
@@ -53,6 +54,7 @@ export function cleanLinkData(data: Partial<LinkItem>): Record<string, unknown> 
  */
 export function transformDocToLinkItem(id: string, data: DocumentData): LinkItem {
   let createdAtStr: string | undefined;
+  let updatedAtStr: string | undefined;
 
   if (data.createdAt) {
     if (typeof data.createdAt.toDate === "function") {
@@ -63,6 +65,18 @@ export function transformDocToLinkItem(id: string, data: DocumentData): LinkItem
       createdAtStr = data.createdAt.toISOString();
     } else if (typeof data.createdAt.seconds === "number") {
       createdAtStr = new Date(data.createdAt.seconds * 1000).toISOString();
+    }
+  }
+
+  if (data.updatedAt) {
+    if (typeof data.updatedAt.toDate === "function") {
+      updatedAtStr = data.updatedAt.toDate().toISOString();
+    } else if (typeof data.updatedAt === "string") {
+      updatedAtStr = data.updatedAt;
+    } else if (data.updatedAt instanceof Date) {
+      updatedAtStr = data.updatedAt.toISOString();
+    } else if (typeof data.updatedAt.seconds === "number") {
+      updatedAtStr = new Date(data.updatedAt.seconds * 1000).toISOString();
     }
   }
 
@@ -77,6 +91,7 @@ export function transformDocToLinkItem(id: string, data: DocumentData): LinkItem
     isPopular: Boolean(data.isPopular),
     clickCount: data.clickCount ?? 0,
     createdAt: createdAtStr,
+    updatedAt: updatedAtStr,
   };
 }
 

@@ -29,9 +29,26 @@ import {
   AlertTriangle,
   Loader2,
   Link as LinkIcon,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+function formatDateTime(dateStr?: string): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}.${month}.${day} ${hours}:${minutes}`;
+  } catch {
+    return "";
+  }
+}
 
 interface LinkCardProps {
   link: LinkItem;
@@ -304,12 +321,17 @@ export function LinkCard({
     return (
       <div className="w-full bg-[#efefef] border-2 border-[#f68d1f] p-3 sm:p-3.5 transition-all shadow-md rounded-[2px] space-y-3">
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-[#3d4f97]/40 pb-1.5">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-b border-[#3d4f97]/40 pb-1.5 flex-wrap gap-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <Pencil className="w-3.5 h-3.5 text-[#f68d1f]" />
             <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#21242e] tracking-wider">
               EDIT LINK CARTRIDGE (인라인 링크 수정)
             </span>
+            {link.updatedAt && (
+              <span className="text-[8px] sm:text-[9px] text-[#60619c] font-mono">
+                (이전 수정: {formatDateTime(link.updatedAt)})
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -634,13 +656,26 @@ export function LinkCard({
               </p>
             )}
 
-            {/* Click count indicator */}
-            {typeof link.clickCount === "number" && (
-              <div className="flex items-center gap-1 mt-0.5 text-[8px] sm:text-[9px] text-[#60619c] font-mono">
-                <MousePointerClick className="w-2.5 h-2.5" />
-                <span>{link.clickCount.toLocaleString()} clicks</span>
-              </div>
-            )}
+            {/* Click count & Updated time indicator */}
+            <div className="flex items-center gap-2 mt-0.5 text-[8px] sm:text-[9px] text-[#60619c] font-mono flex-wrap">
+              {typeof link.clickCount === "number" && (
+                <div className="flex items-center gap-1">
+                  <MousePointerClick className="w-2.5 h-2.5" />
+                  <span>{link.clickCount.toLocaleString()} clicks</span>
+                </div>
+              )}
+
+              {link.updatedAt && (
+                <div
+                  className="flex items-center gap-1 text-[#3d4f97] font-semibold"
+                  title={`최종 수정 일시: ${link.updatedAt}`}
+                  data-testid="link-updated-at"
+                >
+                  <Clock className="w-2.5 h-2.5 text-[#f68d1f]" />
+                  <span>수정: {formatDateTime(link.updatedAt)}</span>
+                </div>
+              )}
+            </div>
           </div>
         </a>
 
