@@ -233,6 +233,22 @@ export async function deleteLinkFromFirestore(linkId: string): Promise<void> {
 }
 
 /**
+ * Update an existing link in Firestore at `users/anonymous/links`
+ */
+export async function updateLinkInFirestore(
+  linkId: string,
+  updatedData: Partial<LinkItem>
+): Promise<void> {
+  const docRef = doc(db, "users", "anonymous", "links", linkId);
+  const cleaned = cleanLinkData(updatedData);
+
+  await updateDoc(docRef, {
+    ...cleaned,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
  * Seed sample links into Firestore (users/anonymous/links)
  */
 export async function seedSampleLinksToFirestore(sampleLinks: LinkItem[]): Promise<void> {

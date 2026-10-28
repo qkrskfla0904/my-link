@@ -119,7 +119,7 @@ async function runBrowserTest() {
       await sleep(1000);
       try {
         const ready = await evaluate(`(() => {
-          return document.title.length > 0 && Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('ADD LINK'));
+          return document.title.length > 0 && Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('ADD LINK') || b.textContent.includes('링크 추가'));
         })()`);
         if (ready) {
           loaded = true;
@@ -145,7 +145,7 @@ async function runBrowserTest() {
     console.log(`🔘 [STEP 2] Clicking "+ ADD LINK" button...`);
     const clickAddResult = await evaluate(`(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      const addBtn = buttons.find(b => b.textContent.includes('ADD LINK'));
+      const addBtn = buttons.find(b => b.textContent.includes('ADD LINK') || b.textContent.includes('링크 추가'));
       if (!addBtn) return { success: false, error: 'ADD LINK button not found' };
       addBtn.click();
       return { success: true };

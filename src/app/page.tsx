@@ -12,6 +12,7 @@ import { ThemeAccent, UserProfile, LinkItem } from "@/types";
 import {
   addLinkToFirestore,
   getLinksFromFirestore,
+  updateLinkInFirestore,
   incrementFirestoreLinkClick,
   deleteLinkFromFirestore,
   seedSampleLinksToFirestore,
@@ -162,6 +163,34 @@ export default function HomePage() {
       await fetchLinks(false, "목록 갱신 완료 중...");
     } catch (error) {
       console.error("Failed to delete link from Firestore:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Update link handler: updates in Firestore (users/anonymous/links), then refreshes the list (갱신형)
+  const handleUpdateLink = async (linkId: string, updatedData: Partial<LinkItem>) => {
+    try {
+      setIsUpdating(true);
+      setUpdateMessage("링크 수정 사항을 Firestore에 저장하고 목록을 갱신하는 중...");
+
+      // 1. Update document in Firestore at users/anonymous/links
+      await updateLinkInFirestore(linkId, updatedData);
+
+      // 2. Refresh the link list from Firestore ("실시간은 아니고, 갱신형이야")
+      await fetchLinks(false, "수정된 최신 링크 목록 불러오는 중...");
+
+      // 3. If category changed and is currently filtered out, switch to "전체" so the updated link is visible
+      if (
+        updatedData.category &&
+        selectedCategory !== "전체" &&
+        selectedCategory !== updatedData.category
+      ) {
+        setSelectedCategory("전체");
+      }
+    } catch (error) {
+      console.error("Error updating link in Firestore:", error);
+      throw error;
     } finally {
       setIsUpdating(false);
     }
@@ -422,6 +451,8 @@ export default function HomePage() {
                   theme={theme}
                   onLinkClick={handleLinkClick}
                   onDelete={handleDeleteLink}
+                  onUpdate={handleUpdateLink}
+                  existingCategories={categories}
                 />
               ))}
 

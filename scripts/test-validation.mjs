@@ -84,7 +84,7 @@ async function runValidationTest() {
       try {
         const title = await evaluate("document.title");
         const hasAddBtn = await evaluate(`(() => {
-          return Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('ADD LINK'));
+          return Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('ADD LINK') || b.textContent.includes('링크 추가'));
         })()`);
         if (title && hasAddBtn) {
           loaded = true;
@@ -103,7 +103,7 @@ async function runValidationTest() {
     console.log("🔘 Clicking '+ ADD LINK' to open dialog...");
     const openRes = await evaluate(`(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      const addBtn = buttons.find(b => b.textContent.includes('ADD LINK'));
+      const addBtn = buttons.find(b => b.textContent.includes('ADD LINK') || b.textContent.includes('링크 추가'));
       if (!addBtn) return { success: false, buttons: buttons.map(b => b.textContent) };
       addBtn.click();
       return { success: true };
