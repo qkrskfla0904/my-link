@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { INITIAL_PROFILE } from "@/constants";
 import { ProfileHeader } from "@/components/links/ProfileHeader";
 import { LinkCard } from "@/components/links/LinkCard";
@@ -12,16 +12,18 @@ import { ShareModal } from "@/components/common/ShareModal";
 import { ThemeAccent, UserProfile, LinkItem } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import {
-  addLinkToFirestore,
-  getLinksFromFirestore,
-  updateLinkInFirestore,
-  incrementFirestoreLinkClick,
-  deleteLinkFromFirestore,
-  seedSampleLinksToFirestore,
-  syncUserProfileToFirestore,
-  getUserProfileFromFirestore,
-  updateUserProfileInFirestore,
-} from "@/lib/links";
+  useLinks,
+  useAddLink,
+  useUpdateLink,
+  useDeleteLink,
+  useIncrementLinkClick,
+  useSeedSampleLinks,
+} from "@/hooks/useLinks";
+import {
+  useUserProfile,
+  useUpdateProfile,
+  useSyncUserProfile,
+} from "@/hooks/useProfile";
 import {
   ChevronRight,
   Radio as RadioIcon,
@@ -74,10 +76,27 @@ function GoogleIcon({ className = "w-4 h-4" }: { className?: string }) {
 export default function HomePage() {
   const { user, loading: isAuthLoading, loginWithGoogle } = useAuth();
 
-  const [profile, setProfile] = useState<UserProfile>(() => ({
-    ...INITIAL_PROFILE,
-    links: [], // Populated from Firestore based on user.uid
-  }));
+  // 1. TanStack Query hooks (Request-Response only, NO real-time subscriptions)
+  const {
+    data: linksData = [],
+    isLoading: isLinksLoading,
+    isFetching: isLinksFetching,
+    refetch: refetchLinks,
+  } = useLinks(user?.uid);
+
+  const {
+    data: userProfileData,
+    isLoading: isProfileLoading,
+  } = useUserProfile(user?.uid);
+
+  const addLinkMutation = useAddLink(user?.uid);
+  const updateLinkMutation = useUpdateLink(user?.uid);
+  const deleteLinkMutation = useDeleteLink(user?.uid);
+  const clickCountMutation = useIncrementLinkClick(user?.uid);
+  const seedSampleMutation = useSeedSampleLinks(user?.uid);
+  const updateProfileMutation = useUpdateProfile(user?.uid);
+  const syncProfileMutation = useSyncUserProfile();
+
   const [theme, setTheme] = useState<ThemeAccent>("violet");
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -86,43 +105,21 @@ export default function HomePage() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [pollVote, setPollVote] = useState("option-1");
   const [pollSubmitted, setPollSubmitted] = useState(false);
-  const [isFirestoreConnected, setIsFirestoreConnected] = useState(false);
+  const [likesCount, setLikesCount] = useState(245);
 
-  // Loading indicators: initial load vs. ongoing background update/refresh
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState<string>("링크 목록 갱신 중...");
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  // Function to load links from Firestore for a specific user: users/{userId}/links
-  const fetchLinks = useCallback(
-    async (userId: string, isInitial = false, customMsg?: string) => {
-      if (isInitial) {
-        setIsInitialLoading(true);
-      } else {
-        setIsUpdating(true);
-        if (customMsg) setUpdateMessage(customMsg);
-      }
-
-      try {
-        const firestoreLinks = await getLinksFromFirestore(userId);
-        setIsFirestoreConnected(true);
-        setProfile((prev) => ({
-          ...prev,
-          links: firestoreLinks,
-        }));
-      } catch (error) {
-        console.error("Failed to load links from Firestore:", error);
-      } finally {
-        if (isInitial) {
-          setIsInitialLoading(false);
-        } else {
-          setIsUpdating(false);
-        }
-      }
-    },
-    []
-  );
+  // Sync initial user profile info to Firestore upon login
+  useEffect(() => {
+    if (user) {
+      syncProfileMutation.mutate({
+        userId: user.uid,
+        userData: {
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        },
+      });
+    }
+  }, [user?.uid]);
 
   // Initialize theme from localStorage
   useEffect(() => {
@@ -138,49 +135,6 @@ export default function HomePage() {
     }
   }, []);
 
-  // When user auth state changes:
-  useEffect(() => {
-    if (user) {
-      // 1. Sync auth user info to Firestore users/{user.uid}
-      syncUserProfileToFirestore(user.uid, {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-      }).then(async () => {
-        // Fetch any existing custom user profile from Firestore users/{user.uid}
-        const userDoc = await getUserProfileFromFirestore(user.uid);
-        if (userDoc) {
-          setProfile((prev) => ({
-            ...prev,
-            displayName: userDoc.displayName || user.displayName || prev.displayName,
-            bio: userDoc.bio || prev.bio,
-            avatarUrl: userDoc.avatarUrl || user.photoURL || prev.avatarUrl,
-            tags: userDoc.tags || prev.tags,
-            statusMessage: userDoc.statusMessage || prev.statusMessage,
-            isAvailableForHire: userDoc.isAvailableForHire ?? prev.isAvailableForHire,
-            stats: userDoc.stats || prev.stats,
-          }));
-        } else {
-          setProfile((prev) => ({
-            ...prev,
-            displayName: user.displayName || prev.displayName,
-            avatarUrl: user.photoURL || prev.avatarUrl,
-          }));
-        }
-      });
-
-      // 2. Fetch personalized links from users/{user.uid}/links
-      fetchLinks(user.uid, true);
-    } else {
-      // When logged out, reset personalized links
-      setProfile((prev) => ({
-        ...prev,
-        links: [],
-      }));
-      setIsFirestoreConnected(false);
-    }
-  }, [user, fetchLinks]);
-
   // Theme change handler with persistence
   const handleThemeChange = (newTheme: ThemeAccent) => {
     setTheme(newTheme);
@@ -191,6 +145,58 @@ export default function HomePage() {
     }
   };
 
+  // Composed profile derived from TanStack Query caches and Auth
+  const profile: UserProfile = useMemo(() => {
+    if (!user) {
+      return {
+        ...INITIAL_PROFILE,
+        links: [],
+      };
+    }
+    return {
+      ...INITIAL_PROFILE,
+      id: user.uid,
+      displayName: userProfileData?.displayName || user.displayName || INITIAL_PROFILE.displayName,
+      bio: userProfileData?.bio !== undefined ? userProfileData.bio : INITIAL_PROFILE.bio,
+      avatarUrl: userProfileData?.avatarUrl || user.photoURL || INITIAL_PROFILE.avatarUrl,
+      tags: userProfileData?.tags || INITIAL_PROFILE.tags,
+      statusMessage: userProfileData?.statusMessage || INITIAL_PROFILE.statusMessage,
+      isAvailableForHire: userProfileData?.isAvailableForHire ?? true,
+      stats: {
+        views: userProfileData?.stats?.views ?? 1280,
+        likes: userProfileData?.stats?.likes ?? likesCount,
+      },
+      links: linksData,
+    };
+  }, [user, userProfileData, linksData, likesCount]);
+
+  // Unified loading indicators
+  const isUpdating =
+    isLinksFetching ||
+    addLinkMutation.isPending ||
+    updateLinkMutation.isPending ||
+    deleteLinkMutation.isPending ||
+    seedSampleMutation.isPending ||
+    updateProfileMutation.isPending;
+
+  const isInitialLoading = user ? isLinksLoading || isProfileLoading : false;
+  const isFirestoreConnected = Boolean(user && !isLinksLoading);
+  const isSeeding = seedSampleMutation.isPending;
+
+  const updateMessage = addLinkMutation.isPending
+    ? "새 링크를 저장하고 캐시를 갱신하는 중..."
+    : updateLinkMutation.isPending
+    ? "링크 수정 사항을 저장하는 중..."
+    : deleteLinkMutation.isPending
+    ? "링크를 삭제하는 중..."
+    : seedSampleMutation.isPending
+    ? "샘플 데이터를 등록하는 중..."
+    : updateProfileMutation.isPending
+    ? "프로필 수정 사항을 저장하는 중..."
+    : isLinksFetching
+    ? "최신 링크 목록을 불러오는 중..."
+    : "동기화 중...";
+
   // Profile update handler: saves to Firestore users/{user.uid} only when there are actual changes
   const handleSaveProfile = async (updatedData: {
     displayName: string;
@@ -200,7 +206,6 @@ export default function HomePage() {
     statusMessage?: string;
     isAvailableForHire?: boolean;
   }) => {
-    // Check if any field has actually changed
     const areTagsSame = (a: string[] = [], b: string[] = []) =>
       a.length === b.length && a.every((tag, idx) => tag === b[idx]);
 
@@ -212,137 +217,58 @@ export default function HomePage() {
     const isTagsSame = areTagsSame(updatedData.tags || [], profile.tags || []);
 
     if (isNameSame && isBioSame && isAvatarSame && isStatusSame && isHireSame && isTagsSame) {
-      // 변경 사항이 없으면 Firestore 및 Auth 업데이트를 수행하지 않음
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setUpdateMessage("프로필 수정 사항을 Firestore에 저장하는 중...");
-
-      if (user) {
-        await updateUserProfileInFirestore(user.uid, updatedData);
-      }
-
-      setProfile((prev) => ({
-        ...prev,
-        displayName: updatedData.displayName,
-        bio: updatedData.bio !== undefined ? updatedData.bio : prev.bio,
-        avatarUrl: updatedData.avatarUrl !== undefined ? updatedData.avatarUrl : prev.avatarUrl,
-        tags: updatedData.tags ?? prev.tags,
-        statusMessage: updatedData.statusMessage !== undefined ? updatedData.statusMessage : prev.statusMessage,
-        isAvailableForHire: updatedData.isAvailableForHire ?? prev.isAvailableForHire,
-      }));
-    } catch (error) {
-      console.error("Error saving profile to Firestore:", error);
-      throw error;
-    } finally {
-      setIsUpdating(false);
+    if (user) {
+      await updateProfileMutation.mutateAsync(updatedData);
     }
   };
 
-  // Add link handler: saves to Firestore users/{user.uid}/links
+  // Add link handler
   const handleAddLink = async (newLink: LinkItem) => {
     if (!user) {
       alert("로그인 후 링크를 추가할 수 있습니다.");
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setUpdateMessage("새 링크를 Firestore에 저장하고 목록을 갱신하는 중...");
+    await addLinkMutation.mutateAsync(newLink);
 
-      // 1. Save directly to Firestore collection: users/{user.uid}/links (with serverTimestamp)
-      await addLinkToFirestore(user.uid, newLink);
-
-      // 2. Refresh the link list from Firestore so the newly added link appears in order
-      await fetchLinks(user.uid, false, "최신 목록 불러오는 중...");
-
-      // 3. If currently filtered out, switch to "전체" so the newly inserted link is visible
-      if (selectedCategory !== "전체" && selectedCategory !== newLink.category) {
-        setSelectedCategory("전체");
-      }
-    } catch (error) {
-      console.error("Error saving link to Firestore:", error);
-      throw error;
-    } finally {
-      setIsUpdating(false);
+    if (selectedCategory !== "전체" && selectedCategory !== newLink.category) {
+      setSelectedCategory("전체");
     }
   };
 
-  // Delete link handler: deletes from Firestore users/{user.uid}/links
+  // Delete link handler
   const handleDeleteLink = async (linkId: string) => {
     if (!user) return;
-    try {
-      setIsUpdating(true);
-      setUpdateMessage("링크 삭제 후 목록을 갱신하는 중...");
-      await deleteLinkFromFirestore(user.uid, linkId);
-      await fetchLinks(user.uid, false, "목록 갱신 완료 중...");
-    } catch (error) {
-      console.error("Failed to delete link from Firestore:", error);
-    } finally {
-      setIsUpdating(false);
-    }
+    await deleteLinkMutation.mutateAsync(linkId);
   };
 
-  // Update link handler: updates in Firestore users/{user.uid}/links/{linkId}
+  // Update link handler
   const handleUpdateLink = async (linkId: string, updatedData: Partial<LinkItem>) => {
     if (!user) return;
-    try {
-      setIsUpdating(true);
-      setUpdateMessage("링크 수정 사항을 Firestore에 저장하고 목록을 갱신하는 중...");
+    await updateLinkMutation.mutateAsync({ linkId, data: updatedData });
 
-      await updateLinkInFirestore(user.uid, linkId, updatedData);
-      await fetchLinks(user.uid, false, "수정된 최신 링크 목록 불러오는 중...");
-
-      if (
-        updatedData.category &&
-        selectedCategory !== "전체" &&
-        selectedCategory !== updatedData.category
-      ) {
-        setSelectedCategory("전체");
-      }
-    } catch (error) {
-      console.error("Error updating link in Firestore:", error);
-      throw error;
-    } finally {
-      setIsUpdating(false);
+    if (
+      updatedData.category &&
+      selectedCategory !== "전체" &&
+      selectedCategory !== updatedData.category
+    ) {
+      setSelectedCategory("전체");
     }
   };
 
-  // Link click counter handler with Firestore persistence: users/{user.uid}/links
+  // Link click counter handler
   const handleLinkClick = (linkId: string) => {
     if (user) {
-      incrementFirestoreLinkClick(user.uid, linkId);
+      clickCountMutation.mutate(linkId);
     }
-
-    setProfile((prev) => {
-      const updatedLinks = prev.links.map((link) => {
-        if (link.id === linkId) {
-          return {
-            ...link,
-            clickCount: (link.clickCount ?? 0) + 1,
-          };
-        }
-        return link;
-      });
-
-      return {
-        ...prev,
-        links: updatedLinks,
-      };
-    });
   };
 
   // Like change handler
   const handleLikeChange = (newLikes: number) => {
-    setProfile((prev) => ({
-      ...prev,
-      stats: {
-        views: prev.stats?.views ?? 1280,
-        likes: newLikes,
-      },
-    }));
+    setLikesCount(newLikes);
   };
 
   // Seed sample links into Firestore users/{user.uid}/links
@@ -353,18 +279,11 @@ export default function HomePage() {
     }
 
     try {
-      setIsSeeding(true);
-      setIsUpdating(true);
-      setUpdateMessage("샘플 링크를 등록하고 목록을 불러오는 중...");
       const starters = INITIAL_PROFILE.links.slice(0, 4);
-      await seedSampleLinksToFirestore(user.uid, starters);
-      await fetchLinks(user.uid, false, "샘플 데이터 반영 중...");
+      await seedSampleMutation.mutateAsync(starters);
     } catch (error) {
       console.error("Error seeding starter links to Firestore:", error);
       alert("Firestore 샘플 등록 중 오류가 발생했습니다. Firebase 설정을 확인해주세요.");
-    } finally {
-      setIsSeeding(false);
-      setIsUpdating(false);
     }
   };
 
@@ -624,9 +543,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {/* Manual Refresh Button */}
                   <Button
-                    onClick={() =>
-                      fetchLinks(user.uid, false, "Firestore 링크 목록 다시 불러오는 중...")
-                    }
+                    onClick={() => refetchLinks()}
                     disabled={isInitialLoading || isUpdating}
                     variant="nintendoPlate"
                     size="sm"
@@ -634,10 +551,10 @@ export default function HomePage() {
                     className="h-6 px-1.5 text-[9px] font-bold"
                   >
                     <RefreshCw
-                      className={`w-3 h-3 ${isUpdating ? "animate-spin text-[#f68d1f]" : ""}`}
+                      className={`w-3 h-3 ${isLinksFetching ? "animate-spin text-[#f68d1f]" : ""}`}
                     />
                     <span className="hidden sm:inline">
-                      {isUpdating ? "갱신 중..." : "새로고침"}
+                      {isLinksFetching ? "갱신 중..." : "새로고침"}
                     </span>
                   </Button>
 
