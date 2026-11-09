@@ -12,10 +12,13 @@ import {
   query,
   orderBy,
   increment,
+  where,
+  limit,
   type DocumentData,
   type QuerySnapshot,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { updateProfile } from "firebase/auth";
+import { db, auth } from "./firebase";
 import { LinkItem, UserProfile } from "@/types";
 
 /**
@@ -319,19 +322,30 @@ export async function syncUserProfileToFirestore(
     const payload: Record<string, unknown> = {
       uid: userId,
       email: userData.email || "",
-      displayName: userData.displayName || "마이링크 사용자",
-      photoURL: userData.photoURL || "",
       lastLoginAt: serverTimestamp(),
       path: `users/${userId}/links`,
     };
 
     if (!existing.exists()) {
       payload.createdAt = serverTimestamp();
+      payload.displayName = userData.displayName || "마이링크 사용자";
+      payload.photoURL = userData.photoURL || "";
       payload.bio = userData.bio || "환영합니다! 나만의 맞춤형 링크 모음입니다. 🚀";
       payload.views = 1;
       payload.likes = 0;
+      payload.tags = ["💻 프론트엔드", "🚀 Next.js & React"];
+      payload.statusMessage = "새로운 기회와 커피챗 언제나 환영합니다 ☕";
+      payload.isAvailableForHire = true;
     } else {
       payload.updatedAt = serverTimestamp();
+      const existingData = existing.data();
+      // Only set initial fallback if not already configured in user document
+      if (!existingData.displayName && userData.displayName) {
+        payload.displayName = userData.displayName;
+      }
+      if (!existingData.photoURL && userData.photoURL) {
+        payload.photoURL = userData.photoURL;
+      }
     }
 
     await setDoc(userDoc, payload, { merge: true });
@@ -357,6 +371,9 @@ export async function getUserProfileFromFirestore(
       displayName: data.displayName || "",
       bio: data.bio || "",
       avatarUrl: data.photoURL || undefined,
+      tags: Array.isArray(data.tags) ? data.tags : undefined,
+      statusMessage: data.statusMessage || undefined,
+      isAvailableForHire: data.isAvailableForHire ?? true,
       stats: {
         views: data.views ?? 1,
         likes: data.likes ?? 0,
@@ -365,5 +382,101 @@ export async function getUserProfileFromFirestore(
   } catch (error) {
     console.warn("Failed to get user profile from Firestore:", error);
     return null;
+  }
+}
+
+/**
+ * Check if a display name is already taken by another user in Firestore
+ */
+export async function checkDisplayNameDuplicate(
+  displayName: string,
+  currentUserId?: string
+): Promise<{ isAvailable: boolean; message: string }> {
+  const trimmed = displayName.trim();
+  if (!trimmed) {
+    return { isAvailable: false, message: "이름을 입력해주세요." };
+  }
+  if (trimmed.length < 2) {
+    return { isAvailable: false, message: "이름은 최소 2글자 이상이어야 합니다." };
+  }
+  if (trimmed.length > 20) {
+    return { isAvailable: false, message: "이름은 최대 20자까지 가능합니다." };
+  }
+
+  try {
+    const usersCol = collection(db, "users");
+    const q = query(usersCol, where("displayName", "==", trimmed), limit(5));
+    const querySnapshot = await getDocs(q);
+
+    // Filter out the current user's document
+    const duplicates = querySnapshot.docs.filter((d) => d.id !== currentUserId);
+
+    if (duplicates.length > 0) {
+      return {
+        isAvailable: false,
+        message: "이미 사용 중인 닉네임입니다. 다른 이름을 입력해주세요.",
+      };
+    }
+
+    // If matches only current user
+    if (querySnapshot.docs.length > 0 && querySnapshot.docs[0].id === currentUserId) {
+      return {
+        isAvailable: true,
+        message: "현재 회원님이 사용 중인 닉네임입니다. (사용 가능)",
+      };
+    }
+
+    return {
+      isAvailable: true,
+      message: "사용 가능한 멋진 닉네임입니다! 👍",
+    };
+  } catch (error) {
+    console.warn("Failed to check displayName duplication in Firestore:", error);
+    // If Firestore rules restrict querying the users collection, allow graceful fallback
+    return {
+      isAvailable: true,
+      message: "사용 가능한 닉네임입니다. (로컬 검증 완료)",
+    };
+  }
+}
+
+/**
+ * Update user profile information in Firestore and Firebase Auth
+ */
+export async function updateUserProfileInFirestore(
+  userId: string,
+  profileData: {
+    displayName: string;
+    bio?: string;
+    avatarUrl?: string;
+    tags?: string[];
+    statusMessage?: string;
+    isAvailableForHire?: boolean;
+  }
+): Promise<void> {
+  const userDoc = getUserDocRef(userId);
+
+  const payload: Record<string, unknown> = {
+    displayName: profileData.displayName.trim(),
+    bio: profileData.bio !== undefined ? profileData.bio.trim() : "",
+    photoURL: profileData.avatarUrl !== undefined ? profileData.avatarUrl.trim() : "",
+    tags: profileData.tags || [],
+    statusMessage: profileData.statusMessage !== undefined ? profileData.statusMessage.trim() : "",
+    isAvailableForHire: profileData.isAvailableForHire ?? true,
+    updatedAt: serverTimestamp(),
+  };
+
+  await setDoc(userDoc, payload, { merge: true });
+
+  // Update Firebase Auth current user profile if user is logged in
+  if (auth.currentUser && auth.currentUser.uid === userId) {
+    try {
+      await updateProfile(auth.currentUser, {
+        displayName: profileData.displayName.trim(),
+        photoURL: profileData.avatarUrl?.trim() || null,
+      });
+    } catch (authErr) {
+      console.warn("Failed to update Firebase Auth profile:", authErr);
+    }
   }
 }

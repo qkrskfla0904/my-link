@@ -70,6 +70,31 @@ export const linkFormSchema = z
 
 export type LinkFormValues = z.infer<typeof linkFormSchema>;
 
+export const profileFormSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(1, "표시 이름(Display Name)을 입력해주세요.")
+    .min(2, "이름은 최소 2글자 이상이어야 합니다.")
+    .max(20, "이름은 최대 20자까지 입력 가능합니다."),
+  bio: z
+    .string()
+    .max(120, "소개글은 최대 120자까지 입력 가능합니다.")
+    .optional(),
+  avatarUrl: z
+    .string()
+    .trim()
+    .optional(),
+  statusMessage: z
+    .string()
+    .max(50, "상태 메시지는 최대 50자까지 입력 가능합니다.")
+    .optional(),
+  tags: z.string().optional(),
+  isAvailableForHire: z.boolean().default(true),
+});
+
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
 export function normalizeUrl(url: string): string {
   const trimmed = url.trim();
   if (

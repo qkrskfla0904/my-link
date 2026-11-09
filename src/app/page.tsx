@@ -6,6 +6,7 @@ import { ProfileHeader } from "@/components/links/ProfileHeader";
 import { LinkCard } from "@/components/links/LinkCard";
 import { CategoryFilter } from "@/components/links/CategoryFilter";
 import { AddLinkDialog } from "@/components/links/AddLinkDialog";
+import { EditProfileDialog } from "@/components/links/EditProfileDialog";
 import { ThemePicker } from "@/components/common/ThemePicker";
 import { ShareModal } from "@/components/common/ShareModal";
 import { ThemeAccent, UserProfile, LinkItem } from "@/types";
@@ -19,6 +20,7 @@ import {
   seedSampleLinksToFirestore,
   syncUserProfileToFirestore,
   getUserProfileFromFirestore,
+  updateUserProfileInFirestore,
 } from "@/lib/links";
 import {
   ChevronRight,
@@ -37,6 +39,7 @@ import {
   ExternalLink,
   CheckCircle2,
   UserCheck,
+  UserCog,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +83,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [pollVote, setPollVote] = useState("option-1");
   const [pollSubmitted, setPollSubmitted] = useState(false);
   const [isFirestoreConnected, setIsFirestoreConnected] = useState(false);
@@ -150,12 +154,17 @@ export default function HomePage() {
             ...prev,
             displayName: userDoc.displayName || user.displayName || prev.displayName,
             bio: userDoc.bio || prev.bio,
+            avatarUrl: userDoc.avatarUrl || user.photoURL || prev.avatarUrl,
+            tags: userDoc.tags || prev.tags,
+            statusMessage: userDoc.statusMessage || prev.statusMessage,
+            isAvailableForHire: userDoc.isAvailableForHire ?? prev.isAvailableForHire,
             stats: userDoc.stats || prev.stats,
           }));
         } else {
           setProfile((prev) => ({
             ...prev,
             displayName: user.displayName || prev.displayName,
+            avatarUrl: user.photoURL || prev.avatarUrl,
           }));
         }
       });
@@ -179,6 +188,56 @@ export default function HomePage() {
       localStorage.setItem(STORAGE_THEME_KEY, newTheme);
     } catch (e) {
       console.error("Failed to save theme to localStorage:", e);
+    }
+  };
+
+  // Profile update handler: saves to Firestore users/{user.uid} only when there are actual changes
+  const handleSaveProfile = async (updatedData: {
+    displayName: string;
+    bio?: string;
+    avatarUrl?: string;
+    tags?: string[];
+    statusMessage?: string;
+    isAvailableForHire?: boolean;
+  }) => {
+    // Check if any field has actually changed
+    const areTagsSame = (a: string[] = [], b: string[] = []) =>
+      a.length === b.length && a.every((tag, idx) => tag === b[idx]);
+
+    const isNameSame = updatedData.displayName.trim() === (profile.displayName || "").trim();
+    const isBioSame = (updatedData.bio ?? "").trim() === (profile.bio ?? "").trim();
+    const isAvatarSame = (updatedData.avatarUrl ?? "").trim() === (profile.avatarUrl ?? "").trim();
+    const isStatusSame = (updatedData.statusMessage ?? "").trim() === (profile.statusMessage ?? "").trim();
+    const isHireSame = (updatedData.isAvailableForHire ?? true) === (profile.isAvailableForHire ?? true);
+    const isTagsSame = areTagsSame(updatedData.tags || [], profile.tags || []);
+
+    if (isNameSame && isBioSame && isAvatarSame && isStatusSame && isHireSame && isTagsSame) {
+      // 변경 사항이 없으면 Firestore 및 Auth 업데이트를 수행하지 않음
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      setUpdateMessage("프로필 수정 사항을 Firestore에 저장하는 중...");
+
+      if (user) {
+        await updateUserProfileInFirestore(user.uid, updatedData);
+      }
+
+      setProfile((prev) => ({
+        ...prev,
+        displayName: updatedData.displayName,
+        bio: updatedData.bio !== undefined ? updatedData.bio : prev.bio,
+        avatarUrl: updatedData.avatarUrl !== undefined ? updatedData.avatarUrl : prev.avatarUrl,
+        tags: updatedData.tags ?? prev.tags,
+        statusMessage: updatedData.statusMessage !== undefined ? updatedData.statusMessage : prev.statusMessage,
+        isAvailableForHire: updatedData.isAvailableForHire ?? prev.isAvailableForHire,
+      }));
+    } catch (error) {
+      console.error("Error saving profile to Firestore:", error);
+      throw error;
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -343,6 +402,7 @@ export default function HomePage() {
         theme={theme}
         onOpenShareModal={() => setIsShareOpen(true)}
         onLikeChange={handleLikeChange}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
       />
 
       {/* 2. Main Two-Column Modular Grid */}
@@ -579,6 +639,18 @@ export default function HomePage() {
                     <span className="hidden sm:inline">
                       {isUpdating ? "갱신 중..." : "새로고침"}
                     </span>
+                  </Button>
+
+                  {/* Edit Profile Button */}
+                  <Button
+                    onClick={() => setIsEditProfileOpen(true)}
+                    variant="nintendoPlate"
+                    size="sm"
+                    title="프로필 및 닉네임 수정 (중복 확인 지원)"
+                    className="h-6 px-2 text-[9px] sm:text-[10px] font-bold bg-white text-[#21242e] border border-[#3d4f97] hover:bg-[#dedede] flex items-center gap-1 cursor-pointer"
+                  >
+                    <UserCog className="w-3 h-3 text-[#f68d1f]" />
+                    <span className="hidden sm:inline">프로필 수정</span>
                   </Button>
 
                   {/* Add Link Trigger Button */}
@@ -889,6 +961,15 @@ export default function HomePage() {
         onClose={() => setIsAddLinkOpen(false)}
         onAddLink={handleAddLink}
         existingCategories={categories}
+      />
+
+      {/* Edit Profile Dialog Popup */}
+      <EditProfileDialog
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        currentProfile={profile}
+        currentUserId={user?.uid}
+        onSave={handleSaveProfile}
       />
     </div>
   );

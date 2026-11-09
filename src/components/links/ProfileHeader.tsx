@@ -16,6 +16,7 @@ import {
   Database,
   LogIn,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ interface ProfileHeaderProps {
   theme: ThemeAccent;
   onOpenShareModal: () => void;
   onLikeChange?: (newLikes: number) => void;
+  onOpenEditProfile?: () => void;
 }
 
 const themeBackgrounds: Record<ThemeAccent, string> = {
@@ -83,6 +85,7 @@ export function ProfileHeader({
   theme,
   onOpenShareModal,
   onLikeChange,
+  onOpenEditProfile,
 }: ProfileHeaderProps) {
   const { user, loginWithGoogle } = useAuth();
   const [likesCount, setLikesCount] = useState(profile.stats?.likes ?? 245);
@@ -103,15 +106,13 @@ export function ProfileHeader({
     (l) => ["github", "blog", "linkedin", "mail", "globe", "youtube", "twitter"].includes(l.icon || "") || l.category === "SNS"
   ).slice(0, 5);
 
-  // Dynamic user data based on login state
-  const displayName = user ? (user.displayName || "사용자") : profile.displayName;
+  // Dynamic user data: profile fields take precedence (custom profile updates), then user fallback
+  const displayName = profile.displayName || (user ? user.displayName : "사용자") || "사용자";
   const username = user
     ? (user.email ? user.email.split("@")[0] : `user_${user.uid.slice(0, 6)}`)
     : profile.username;
-  const avatarSrc = user ? (user.photoURL || profile.avatarUrl) : profile.avatarUrl;
-  const bioText = user
-    ? (profile.bio || "환영합니다! 나만의 맞춤형 링크 모음 및 포트폴리오 허브입니다. 💻🚀✨")
-    : profile.bio;
+  const avatarSrc = profile.avatarUrl || (user ? user.photoURL : undefined);
+  const bioText = profile.bio;
 
   return (
     <div className="w-full mb-3 sm:mb-4">
@@ -160,8 +161,15 @@ export function ProfileHeader({
             <div className="mb-1 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
               <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px]">
                 <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#f68d1f] shrink-0" />
-                <span>개발자 프로필 허브</span>
+                <span>{profile.statusMessage || "개발자 프로필 허브"}</span>
               </Badge>
+
+              {profile.isAvailableForHire && (
+                <Badge variant="nintendoOnline" className="text-[8px] sm:text-[9px] flex items-center gap-1 font-mono">
+                  <Coffee className="w-2.5 h-2.5 text-[#00ff66]" />
+                  <span>커피챗/제안 환영</span>
+                </Badge>
+              )}
 
               {user ? (
                 <Badge
@@ -180,10 +188,24 @@ export function ProfileHeader({
               )}
             </div>
 
-            {/* Chunky Box-Art Display Title */}
-            <h1 className="text-xl sm:text-3xl font-black nintendo-boxart-text tracking-tight break-keep">
-              {displayName}
-            </h1>
+            {/* Chunky Box-Art Display Title & Quick Edit Button */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-3xl font-black nintendo-boxart-text tracking-tight break-keep">
+                {displayName}
+              </h1>
+              {onOpenEditProfile && (
+                <Button
+                  onClick={onOpenEditProfile}
+                  variant="nintendoOrange"
+                  size="sm"
+                  className="h-6 px-2 text-[9px] sm:text-[10px] font-black tracking-tight bg-[#f68d1f] hover:bg-[#ff9d33] flex items-center gap-1 shadow-xs cursor-pointer"
+                  title="프로필 수정 (닉네임 중복 확인 지원)"
+                >
+                  <UserCog className="w-3 h-3" />
+                  <span>프로필 수정</span>
+                </Button>
+              )}
+            </div>
 
             {/* Handle & User Email / Firestore Info */}
             <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
@@ -284,6 +306,19 @@ export function ProfileHeader({
 
         {/* Right: Signal Orange Action Buttons */}
         <div className="flex items-center gap-1.5">
+          {/* Edit Profile Button in Control Strip */}
+          {onOpenEditProfile && (
+            <Button
+              onClick={onOpenEditProfile}
+              variant="nintendoPlate"
+              size="sm"
+              className="text-[10px] sm:text-[11px] font-bold bg-white text-[#21242e] border border-[#3d4f97] hover:bg-[#dedede] flex items-center gap-1 cursor-pointer"
+            >
+              <UserCog className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#f68d1f]" />
+              <span className="hidden xs:inline">프로필 수정</span>
+            </Button>
+          )}
+
           {/* Like / Cheer Button */}
           <Button
             onClick={handleLike}
