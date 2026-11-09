@@ -2,6 +2,8 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
+  setDoc,
   onSnapshot,
   doc,
   updateDoc,
@@ -14,16 +16,27 @@ import {
   type QuerySnapshot,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { LinkItem } from "@/types";
-
-// Collection path specified by user requirements
-export const LINKS_COLLECTION_PATH = "users/anonymous/links";
+import { LinkItem, UserProfile } from "@/types";
 
 /**
- * Helper to get the Firestore collection reference
+ * Returns the personalized Firestore collection path for a user: users/{userId}/links
  */
-export const getLinksCollectionRef = () => {
-  return collection(db, "users", "anonymous", "links");
+export const getLinksCollectionPath = (userId: string = "anonymous"): string => {
+  return `users/${userId}/links`;
+};
+
+/**
+ * Helper to get the personalized Firestore collection reference: users/{userId}/links
+ */
+export const getLinksCollectionRef = (userId: string = "anonymous") => {
+  return collection(db, "users", userId, "links");
+};
+
+/**
+ * Helper to get the user document reference: users/{userId}
+ */
+export const getUserDocRef = (userId: string) => {
+  return doc(db, "users", userId);
 };
 
 /**
@@ -107,12 +120,13 @@ export function sortLinksByCreatedAtDesc(links: LinkItem[]): LinkItem[] {
 }
 
 /**
- * Add a new link to Firestore at `users/anonymous/links`
+ * Add a new link to Firestore at `users/{userId}/links`
  */
 export async function addLinkToFirestore(
+  userId: string,
   newLink: Omit<LinkItem, "id"> | LinkItem
 ): Promise<LinkItem> {
-  const colRef = getLinksCollectionRef();
+  const colRef = getLinksCollectionRef(userId);
   const rawData = cleanLinkData({
     ...newLink,
     isActive: newLink.isActive ?? true,
@@ -138,10 +152,10 @@ export async function addLinkToFirestore(
 }
 
 /**
- * Fetch all links from Firestore `users/anonymous/links` (ordered by createdAt desc)
+ * Fetch all links from Firestore `users/{userId}/links` (ordered by createdAt desc)
  */
-export async function getLinksFromFirestore(): Promise<LinkItem[]> {
-  const colRef = getLinksCollectionRef();
+export async function getLinksFromFirestore(userId: string): Promise<LinkItem[]> {
+  const colRef = getLinksCollectionRef(userId);
   try {
     const q = query(colRef, orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
@@ -166,14 +180,14 @@ export async function getLinksFromFirestore(): Promise<LinkItem[]> {
 }
 
 /**
- * Subscribe to real-time link changes in `users/anonymous/links` (ordered by createdAt desc)
- * Automatically updates when links are added, modified, or removed.
+ * Subscribe to real-time link changes in `users/{userId}/links` (ordered by createdAt desc)
  */
 export function subscribeToLinksFromFirestore(
+  userId: string,
   onUpdate: (links: LinkItem[]) => void,
   onError?: (error: Error) => void
 ): () => void {
-  const colRef = getLinksCollectionRef();
+  const colRef = getLinksCollectionRef(userId);
   const q = query(colRef, orderBy("createdAt", "desc"));
 
   let isCancelled = false;
@@ -226,11 +240,11 @@ export function subscribeToLinksFromFirestore(
 }
 
 /**
- * Increment click counter for a link in Firestore
+ * Increment click counter for a link in Firestore `users/{userId}/links/{linkId}`
  */
-export async function incrementFirestoreLinkClick(linkId: string): Promise<void> {
+export async function incrementFirestoreLinkClick(userId: string, linkId: string): Promise<void> {
   try {
-    const docRef = doc(db, "users", "anonymous", "links", linkId);
+    const docRef = doc(db, "users", userId, "links", linkId);
     await updateDoc(docRef, {
       clickCount: increment(1),
     });
@@ -240,21 +254,22 @@ export async function incrementFirestoreLinkClick(linkId: string): Promise<void>
 }
 
 /**
- * Delete a link from Firestore
+ * Delete a link from Firestore `users/{userId}/links/{linkId}`
  */
-export async function deleteLinkFromFirestore(linkId: string): Promise<void> {
-  const docRef = doc(db, "users", "anonymous", "links", linkId);
+export async function deleteLinkFromFirestore(userId: string, linkId: string): Promise<void> {
+  const docRef = doc(db, "users", userId, "links", linkId);
   await deleteDoc(docRef);
 }
 
 /**
- * Update an existing link in Firestore at `users/anonymous/links`
+ * Update an existing link in Firestore at `users/{userId}/links/{linkId}`
  */
 export async function updateLinkInFirestore(
+  userId: string,
   linkId: string,
   updatedData: Partial<LinkItem>
 ): Promise<void> {
-  const docRef = doc(db, "users", "anonymous", "links", linkId);
+  const docRef = doc(db, "users", userId, "links", linkId);
   const cleaned = cleanLinkData(updatedData);
 
   await updateDoc(docRef, {
@@ -264,10 +279,13 @@ export async function updateLinkInFirestore(
 }
 
 /**
- * Seed sample links into Firestore (users/anonymous/links)
+ * Seed sample links into Firestore `users/{userId}/links`
  */
-export async function seedSampleLinksToFirestore(sampleLinks: LinkItem[]): Promise<void> {
-  const colRef = getLinksCollectionRef();
+export async function seedSampleLinksToFirestore(
+  userId: string,
+  sampleLinks: LinkItem[]
+): Promise<void> {
+  const colRef = getLinksCollectionRef(userId);
   for (const item of sampleLinks) {
     const rawData = cleanLinkData({
       ...item,
@@ -279,5 +297,73 @@ export async function seedSampleLinksToFirestore(sampleLinks: LinkItem[]): Promi
       ...rawData,
       createdAt: serverTimestamp(),
     });
+  }
+}
+
+/**
+ * Sync logged-in user profile info to Firestore `users/{userId}`
+ */
+export async function syncUserProfileToFirestore(
+  userId: string,
+  userData: {
+    displayName?: string | null;
+    email?: string | null;
+    photoURL?: string | null;
+    bio?: string;
+  }
+): Promise<void> {
+  try {
+    const userDoc = getUserDocRef(userId);
+    const existing = await getDoc(userDoc);
+
+    const payload: Record<string, unknown> = {
+      uid: userId,
+      email: userData.email || "",
+      displayName: userData.displayName || "마이링크 사용자",
+      photoURL: userData.photoURL || "",
+      lastLoginAt: serverTimestamp(),
+      path: `users/${userId}/links`,
+    };
+
+    if (!existing.exists()) {
+      payload.createdAt = serverTimestamp();
+      payload.bio = userData.bio || "환영합니다! 나만의 맞춤형 링크 모음입니다. 🚀";
+      payload.views = 1;
+      payload.likes = 0;
+    } else {
+      payload.updatedAt = serverTimestamp();
+    }
+
+    await setDoc(userDoc, payload, { merge: true });
+  } catch (error) {
+    console.warn("Failed to sync user profile to Firestore users/{uid}:", error);
+  }
+}
+
+/**
+ * Fetch user profile from Firestore `users/{userId}`
+ */
+export async function getUserProfileFromFirestore(
+  userId: string
+): Promise<Partial<UserProfile> | null> {
+  try {
+    const userDoc = getUserDocRef(userId);
+    const snapshot = await getDoc(userDoc);
+    if (!snapshot.exists()) return null;
+
+    const data = snapshot.data();
+    return {
+      id: userId,
+      displayName: data.displayName || "",
+      bio: data.bio || "",
+      avatarUrl: data.photoURL || undefined,
+      stats: {
+        views: data.views ?? 1,
+        likes: data.likes ?? 0,
+      },
+    };
+  } catch (error) {
+    console.warn("Failed to get user profile from Firestore:", error);
+    return null;
   }
 }

@@ -1,8 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { UserProfile, ThemeAccent } from "@/types";
-import { Heart, ChevronRight, Share2, Activity, Coffee, Globe, Mail, BookOpen } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Heart,
+  ChevronRight,
+  Share2,
+  Activity,
+  Coffee,
+  Globe,
+  Mail,
+  BookOpen,
+  Database,
+  LogIn,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -21,6 +35,29 @@ const themeBackgrounds: Record<ThemeAccent, string> = {
   sky: "bg-[#c0d5e6]", // News Ice
   amber: "bg-[#ecab37]", // Classic Gold
 };
+
+function GoogleIcon({ className = "w-3 h-3" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
 
 function GithubSmallIcon() {
   return (
@@ -47,6 +84,7 @@ export function ProfileHeader({
   onOpenShareModal,
   onLikeChange,
 }: ProfileHeaderProps) {
+  const { user, loginWithGoogle } = useAuth();
   const [likesCount, setLikesCount] = useState(profile.stats?.likes ?? 245);
   const [hasLiked, setHasLiked] = useState(false);
   const heroBg = themeBackgrounds[theme] || themeBackgrounds.violet;
@@ -65,6 +103,16 @@ export function ProfileHeader({
     (l) => ["github", "blog", "linkedin", "mail", "globe", "youtube", "twitter"].includes(l.icon || "") || l.category === "SNS"
   ).slice(0, 5);
 
+  // Dynamic user data based on login state
+  const displayName = user ? (user.displayName || "사용자") : profile.displayName;
+  const username = user
+    ? (user.email ? user.email.split("@")[0] : `user_${user.uid.slice(0, 6)}`)
+    : profile.username;
+  const avatarSrc = user ? (user.photoURL || profile.avatarUrl) : profile.avatarUrl;
+  const bioText = user
+    ? (profile.bio || "환영합니다! 나만의 맞춤형 링크 모음 및 포트폴리오 허브입니다. 💻🚀✨")
+    : profile.bio;
+
   return (
     <div className="w-full mb-3 sm:mb-4">
       {/* 1. Hero Field Panel: Beveled Hardware Frame with Theme Tint */}
@@ -75,25 +123,32 @@ export function ProfileHeader({
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
           {/* shadcn/ui Avatar Component */}
           <div className="relative shrink-0">
-            <Avatar className="w-20 h-20 sm:w-28 sm:h-28 shadow-md rounded-none">
-              {profile.avatarUrl && (
+            <Avatar className="w-20 h-20 sm:w-28 sm:h-28 shadow-md rounded-none border-2 border-white bg-[#dedede]">
+              {avatarSrc && (
                 <AvatarImage
-                  src={profile.avatarUrl}
-                  alt={profile.displayName}
+                  src={avatarSrc}
+                  alt={displayName}
                   className="object-cover"
                 />
               )}
-              <AvatarFallback className="rounded-none font-black text-xl sm:text-2xl">
-                {profile.displayName.slice(0, 1)}
+              <AvatarFallback className="rounded-none font-black text-xl sm:text-2xl bg-[#e60012] text-white">
+                {displayName.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
 
             {/* LED Status Indicator */}
-            {profile.isAvailableForHire && (
+            {user ? (
               <div className="absolute -bottom-1 -right-1">
                 <Badge variant="nintendoOnline" className="text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-ping shrink-0" />
                   온라인
+                </Badge>
+              </div>
+            ) : (
+              <div className="absolute -bottom-1 -right-1">
+                <Badge variant="nintendoGold" className="text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f68d1f] shrink-0" />
+                  게스트
                 </Badge>
               </div>
             )}
@@ -101,35 +156,51 @@ export function ProfileHeader({
 
           {/* Profile Details & Box-Art Wordmark */}
           <div className="flex-1 text-center sm:text-left min-w-0 w-full">
-            {/* Status & Category Bar */}
+            {/* Status & Personalized Path Badges */}
             <div className="mb-1 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
               <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px]">
                 <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#f68d1f] shrink-0" />
                 <span>개발자 프로필 허브</span>
               </Badge>
 
-              {profile.isAvailableForHire && (
+              {user ? (
+                <Badge
+                  variant="nintendoOnline"
+                  className="text-[8px] sm:text-[9px] flex items-center gap-1 font-mono"
+                  title={`Firestore: users/${user.uid}/links`}
+                >
+                  <Database className="w-2.5 h-2.5 text-[#00ff66]" />
+                  <span>users/{user.uid.slice(0, 6)}.../links</span>
+                </Badge>
+              ) : (
                 <Badge variant="nintendoGold" className="text-[8px] sm:text-[9px] flex items-center gap-1">
                   <Coffee className="w-2.5 h-2.5" />
-                  <span>구직/커피챗 가능</span>
+                  <span>게스트 모드 (로그인 시 개인화)</span>
                 </Badge>
               )}
             </div>
 
             {/* Chunky Box-Art Display Title */}
             <h1 className="text-xl sm:text-3xl font-black nintendo-boxart-text tracking-tight break-keep">
-              {profile.displayName}
+              {displayName}
             </h1>
 
-            {/* Handle */}
-            <p className="text-[11px] sm:text-xs font-bold text-white/95 font-mono drop-shadow-sm mt-0.5">
-              @{profile.username}
-            </p>
+            {/* Handle & User Email / Firestore Info */}
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+              <p className="text-[11px] sm:text-xs font-bold text-white/95 font-mono drop-shadow-sm mt-0.5">
+                @{username}
+              </p>
+              {user && (
+                <span className="text-[10px] text-white/80 font-mono bg-black/30 px-1.5 py-0.2 rounded">
+                  {user.email}
+                </span>
+              )}
+            </div>
 
             {/* Bio */}
-            {profile.bio && (
+            {bioText && (
               <p className="text-[11px] sm:text-xs text-white/90 font-medium mt-1.5 sm:mt-2 leading-relaxed bg-[#21242e]/40 p-1.5 sm:p-2 border-l-2 border-[#f68d1f] break-keep text-left">
-                {profile.bio}
+                {bioText}
               </p>
             )}
 
@@ -147,6 +218,18 @@ export function ProfileHeader({
                   {tag}
                 </Badge>
               ))}
+
+              {!user && (
+                <Button
+                  onClick={() => loginWithGoogle()}
+                  size="sm"
+                  variant="nintendoOrange"
+                  className="h-5 px-2 text-[9px] font-black tracking-tight"
+                >
+                  <GoogleIcon className="w-2.5 h-2.5 mr-1" />
+                  로그인하여 내 프로필 만들기
+                </Button>
+              )}
             </div>
 
             {/* SNS Quick Icon Bar */}
@@ -194,11 +277,9 @@ export function ProfileHeader({
             {(profile.stats?.views ?? 1280).toLocaleString()}
           </span>
 
-          {profile.statusMessage && (
-            <span className="hidden sm:inline-block text-[10px] text-[#21242e] font-bold ml-2">
-              • {profile.statusMessage}
-            </span>
-          )}
+          <span className="hidden sm:inline-block text-[10px] text-[#21242e] font-bold ml-2">
+            • {user ? `인증 완료 (${user.email})` : "로그인 시 나만의 클라우드 보관함이 생성됩니다."}
+          </span>
         </div>
 
         {/* Right: Signal Orange Action Buttons */}
