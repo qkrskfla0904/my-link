@@ -15,7 +15,7 @@ export const linkFormSchema = z
       .string()
       .trim()
       .min(1, "URL 주소를 입력해주세요.")
-      .max(200, "URL은 최대 200자까지 입력 가능합니다.")
+      .max(300, "URL은 최대 300자까지 입력 가능합니다.")
       .refine(
         (val) => {
           if (!val) return false;
@@ -28,7 +28,8 @@ export const linkFormSchema = z
             toCheck = `https://${toCheck}`;
           }
           try {
-            const parsed = new URL(toCheck);
+            // Encode URI to support Korean blog paths (e.g. blog.naver.com/아이디/글제목)
+            const parsed = new URL(encodeURI(toCheck));
             return Boolean(
               parsed.hostname &&
               (parsed.hostname === "localhost" || parsed.hostname.includes(".")) &&
@@ -40,7 +41,7 @@ export const linkFormSchema = z
           }
         },
         {
-          message: "올바른 URL(예: https://example.com) 형식을 입력해주세요.",
+          message: "올바른 주소 형식(예: blog.naver.com/아이디, velog.io/@아이디, https://...)을 입력해주세요.",
         }
       ),
     description: z

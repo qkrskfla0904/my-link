@@ -6,7 +6,24 @@ import {
   getUserProfileFromFirestore,
   updateUserProfileInFirestore,
   syncUserProfileToFirestore,
+  getUserByDisplayName,
 } from "@/lib/links";
+
+/**
+ * Hook to search user and links by displayName from Firestore
+ */
+export function useUserByDisplayName(displayName: string | undefined) {
+  const trimmed = displayName ? decodeURIComponent(displayName).trim() : "";
+
+  return useQuery<{ userId: string; profile: UserProfile } | null>({
+    queryKey: ["userByDisplayName", trimmed],
+    queryFn: async () => {
+      if (!trimmed) return null;
+      return await getUserByDisplayName(trimmed);
+    },
+    enabled: Boolean(trimmed),
+  });
+}
 
 /**
  * Hook to fetch user profile from Firestore via TanStack Query (No real-time listeners)

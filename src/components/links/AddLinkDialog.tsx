@@ -179,12 +179,14 @@ export function AddLinkDialog({
 
           {/* 1. Title Input */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor="link-title">LINK TITLE (제목)*</label>
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#21242e]">
+              <label htmlFor="link-title" className="flex items-center gap-1">
+                <span>LINK TITLE (링크 제목)*</span>
+              </label>
               <div className="flex items-center gap-2">
-                <span className="text-[#3d4f97] text-[9px]">REQUIRED</span>
+                <span className="text-[#3d4f97] text-[9px] font-bold">REQUIRED</span>
                 <span
-                  className={`font-mono text-[9px] ${
+                  className={`font-mono text-[10px] ${
                     titleValue.length > 50 ? "text-[#e60012] font-black" : "text-[#60619c]"
                   }`}
                 >
@@ -195,10 +197,10 @@ export function AddLinkDialog({
             <input
               id="link-title"
               type="text"
-              placeholder="예: 최신 프로젝트 데모 사이트"
+              placeholder="예: 내 네이버 블로그, 포트폴리오, 깃허브"
               maxLength={60}
               {...register("title")}
-              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
+              className={`w-full px-2.5 py-1.5 bg-white nintendo-inset text-xs sm:text-sm text-[#21242e] font-bold outline-none rounded-[2px] transition-colors ${
                 errors.title ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
               }`}
             />
@@ -211,69 +213,42 @@ export function AddLinkDialog({
 
           {/* 2. URL Input */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor="link-url">TARGET URL (주소)*</label>
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#21242e]">
+              <label htmlFor="link-url">TARGET URL (블로그 / 웹사이트 주소)*</label>
               <div className="flex items-center gap-2">
-                <span className="text-[#3d4f97] text-[9px]">HTTPS://</span>
+                <span className="text-[#3d4f97] text-[9px] bg-[#dedede] px-1 py-0.2 rounded font-mono font-bold">
+                  HTTP / HTTPS 지원
+                </span>
                 <span
-                  className={`font-mono text-[9px] ${
-                    urlValue.length > 200 ? "text-[#e60012] font-black" : "text-[#60619c]"
+                  className={`font-mono text-[10px] ${
+                    urlValue.length > 300 ? "text-[#e60012] font-black" : "text-[#60619c]"
                   }`}
                 >
-                  {urlValue.length}/200
+                  {urlValue.length}/300
                 </span>
               </div>
             </div>
             <div
-              className={`flex items-center bg-white nintendo-inset px-2 py-1 rounded-[2px] transition-colors ${
+              className={`flex items-center bg-white nintendo-inset px-2.5 py-1.5 rounded-[2px] transition-colors ${
                 errors.url ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
               }`}
             >
-              <LinkIcon className="w-3 h-3 text-[#3d4f97] mr-1.5 shrink-0" />
+              <LinkIcon className="w-3.5 h-3.5 text-[#3d4f97] mr-2 shrink-0" />
               <input
                 id="link-url"
                 type="text"
-                placeholder="https://example.com"
-                maxLength={220}
+                placeholder="예: blog.naver.com/아이디, velog.io/@아이디, https://..."
+                maxLength={320}
                 {...register("url")}
-                className="w-full text-[11px] text-[#21242e] font-mono outline-none bg-transparent"
+                className="w-full text-xs sm:text-[13px] text-[#21242e] font-mono outline-none bg-transparent"
               />
             </div>
+            <p className="text-[9px] text-[#60619c] font-medium">
+              💡 https:// 없이 블로그 주소(예: <span className="font-bold text-[#3d4f97]">blog.naver.com/아이디</span>)만 입력하셔도 자동으로 연결됩니다.
+            </p>
             {errors.url && (
               <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
                 <span>⚠️ {errors.url.message}</span>
-              </p>
-            )}
-          </div>
-
-          {/* 3. Description Input */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor="link-desc">DESCRIPTION (설명)</label>
-              <div className="flex items-center gap-2">
-                <span className="text-[#60619c] text-[9px]">OPTIONAL</span>
-                <span
-                  className={`font-mono text-[9px] ${
-                    descValue.length > 100 ? "text-[#e60012] font-black" : "text-[#60619c]"
-                  }`}
-                >
-                  {descValue.length}/100
-                </span>
-              </div>
-            </div>
-            <input
-              id="link-desc"
-              type="text"
-              placeholder="링크에 대한 한 줄 소개 문구를 적어주세요 (최대 100자)"
-              maxLength={120}
-              {...register("description")}
-              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
-                errors.description ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
-              }`}
-            />
-            {errors.description && (
-              <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
-                <span>⚠️ {errors.description.message}</span>
               </p>
             )}
           </div>

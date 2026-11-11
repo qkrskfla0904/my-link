@@ -362,12 +362,12 @@ export function LinkCard({
 
           {/* 1. Title Input */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor={`edit-title-${link.id}`}>LINK TITLE (제목)*</label>
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#21242e]">
+              <label htmlFor={`edit-title-${link.id}`}>LINK TITLE (링크 제목)*</label>
               <div className="flex items-center gap-2">
-                <span className="text-[#3d4f97] text-[9px]">REQUIRED</span>
+                <span className="text-[#3d4f97] text-[9px] font-bold">REQUIRED</span>
                 <span
-                  className={`font-mono text-[9px] ${
+                  className={`font-mono text-[10px] ${
                     titleValue.length > 50 ? "text-[#e60012] font-black" : "text-[#60619c]"
                   }`}
                 >
@@ -378,10 +378,10 @@ export function LinkCard({
             <input
               id={`edit-title-${link.id}`}
               type="text"
-              placeholder="예: 최신 프로젝트 데모 사이트"
+              placeholder="예: 내 네이버 블로그, 포트폴리오, 깃허브"
               maxLength={60}
               {...register("title")}
-              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
+              className={`w-full px-2.5 py-1.5 bg-white nintendo-inset text-xs sm:text-sm text-[#21242e] font-bold outline-none rounded-[2px] transition-colors ${
                 errors.title ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
               }`}
             />
@@ -394,69 +394,42 @@ export function LinkCard({
 
           {/* 2. URL Input */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor={`edit-url-${link.id}`}>TARGET URL (주소)*</label>
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#21242e]">
+              <label htmlFor={`edit-url-${link.id}`}>TARGET URL (블로그 / 웹사이트 주소)*</label>
               <div className="flex items-center gap-2">
-                <span className="text-[#3d4f97] text-[9px]">HTTPS://</span>
+                <span className="text-[#3d4f97] text-[9px] bg-[#dedede] px-1 py-0.2 rounded font-mono font-bold">
+                  HTTP / HTTPS 지원
+                </span>
                 <span
-                  className={`font-mono text-[9px] ${
-                    urlValue.length > 200 ? "text-[#e60012] font-black" : "text-[#60619c]"
+                  className={`font-mono text-[10px] ${
+                    urlValue.length > 300 ? "text-[#e60012] font-black" : "text-[#60619c]"
                   }`}
                 >
-                  {urlValue.length}/200
+                  {urlValue.length}/300
                 </span>
               </div>
             </div>
             <div
-              className={`flex items-center bg-white nintendo-inset px-2 py-1 rounded-[2px] transition-colors ${
+              className={`flex items-center bg-white nintendo-inset px-2.5 py-1.5 rounded-[2px] transition-colors ${
                 errors.url ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
               }`}
             >
-              <LinkIcon className="w-3 h-3 text-[#3d4f97] mr-1.5 shrink-0" />
+              <LinkIcon className="w-3.5 h-3.5 text-[#3d4f97] mr-2 shrink-0" />
               <input
                 id={`edit-url-${link.id}`}
                 type="text"
-                placeholder="https://example.com"
-                maxLength={220}
+                placeholder="예: blog.naver.com/아이디, velog.io/@아이디, https://..."
+                maxLength={320}
                 {...register("url")}
-                className="w-full text-[11px] text-[#21242e] font-mono outline-none bg-transparent"
+                className="w-full text-xs sm:text-[13px] text-[#21242e] font-mono outline-none bg-transparent"
               />
             </div>
+            <p className="text-[9px] text-[#60619c] font-medium">
+              💡 https:// 없이 블로그 주소(예: <span className="font-bold text-[#3d4f97]">blog.naver.com/아이디</span>)만 입력하셔도 자동으로 연결됩니다.
+            </p>
             {errors.url && (
               <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
                 <span>⚠️ {errors.url.message}</span>
-              </p>
-            )}
-          </div>
-
-          {/* 3. Description Input */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-[#21242e]">
-              <label htmlFor={`edit-desc-${link.id}`}>DESCRIPTION (설명)</label>
-              <div className="flex items-center gap-2">
-                <span className="text-[#60619c] text-[9px]">OPTIONAL</span>
-                <span
-                  className={`font-mono text-[9px] ${
-                    descValue.length > 100 ? "text-[#e60012] font-black" : "text-[#60619c]"
-                  }`}
-                >
-                  {descValue.length}/100
-                </span>
-              </div>
-            </div>
-            <input
-              id={`edit-desc-${link.id}`}
-              type="text"
-              placeholder="링크에 대한 한 줄 소개 문구를 적어주세요 (최대 100자)"
-              maxLength={120}
-              {...register("description")}
-              className={`w-full px-2 py-1 bg-white nintendo-inset text-[11px] text-[#21242e] font-medium outline-none rounded-[2px] transition-colors ${
-                errors.description ? "border-2 border-[#e60012] bg-[#fff5f5]" : ""
-              }`}
-            />
-            {errors.description && (
-              <p className="text-[10px] font-bold text-[#e60012] flex items-center gap-1 mt-0.5">
-                <span>⚠️ {errors.description.message}</span>
               </p>
             )}
           </div>
@@ -611,56 +584,54 @@ export function LinkCard({
   // Normal Reading Mode View (with Always-Visible Edit Button)
   // ----------------------------------------------------------------------
   return (
-    <div className="relative group block w-full bg-[#dedede] hover:bg-[#ffffff] border-t border-l border-white border-b-2 border-r-2 border-[#3d4f97] p-2 sm:p-2.5 transition-all duration-150 shadow-xs rounded-[2px]">
-      <div className="flex items-center justify-between gap-2">
+    <div className="relative group block w-full bg-[#dedede] hover:bg-[#ffffff] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-[#3d4f97] hover:border-[#f68d1f] p-2.5 sm:p-3 transition-all duration-150 shadow-xs hover:shadow-md hover:-translate-y-0.5 rounded-[3px]">
+      <div className="flex items-center justify-between gap-2.5">
         {/* Left: Icon & Headline Info */}
         <a
           href={link.url}
           target={link.url.startsWith("http") ? "_blank" : "_self"}
           rel="noopener noreferrer"
           onClick={handleClick}
-          className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+          className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer py-0.5"
         >
-          {/* Beveled Icon Box */}
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#8ba1d4] nintendo-plate flex items-center justify-center text-[#21242e] shrink-0">
+          {/* Beveled Cartridge Icon Box */}
+          <div className="w-10 h-10 sm:w-11 sm:h-11 bg-[#8ba1d4] group-hover:bg-[#f68d1f] group-hover:text-white transition-colors nintendo-plate flex items-center justify-center text-[#21242e] shrink-0 border border-[#3d4f97] rounded-[2px] shadow-xs">
             <LinkIconRenderer iconName={link.icon} />
           </div>
 
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+          <div className="flex flex-col min-w-0 flex-1 justify-center space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {/* Category Pill */}
               {link.category && (
-                <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px] px-1.5 py-0.2">
+                <Badge variant="nintendoCarbon" className="text-[8px] sm:text-[9px] px-1.5 py-0.2 font-black uppercase">
                   {link.category}
                 </Badge>
               )}
 
               {/* Hot / Popular Badge */}
               {link.isPopular && (
-                <Badge variant="nintendoRed" className="text-[7px] sm:text-[8px] px-1 py-0.2 font-black">
+                <Badge variant="nintendoRed" className="text-[7px] sm:text-[8px] px-1.5 py-0.2 font-black">
                   <Flame className="w-2.5 h-2.5 fill-white shrink-0 mr-0.5" />
                   HOT
                 </Badge>
               )}
 
-              {/* Title Link in Ink-Soft */}
-              <h3 className="font-bold text-[11px] sm:text-xs text-[#3d4f97] group-hover:text-[#e60012] transition-colors truncate max-w-full">
-                {link.title}
-              </h3>
+              {/* URL Domain indicator */}
+              <span className="text-[9px] sm:text-[10px] text-[#60619c] font-mono truncate max-w-[150px] sm:max-w-[240px]">
+                {link.url.replace(/^https?:\/\//, "")}
+              </span>
             </div>
 
-            {/* Description */}
-            {link.description && (
-              <p className="text-[10px] sm:text-[11px] text-[#21242e] font-normal mt-0.5 truncate max-w-full">
-                {link.description}
-              </p>
-            )}
+            {/* Prominent High-Visibility Title */}
+            <h3 className="font-black text-sm sm:text-[15px] text-[#21242e] group-hover:text-[#e60012] transition-colors leading-snug truncate max-w-full">
+              {link.title}
+            </h3>
 
             {/* Click count & Updated time indicator */}
-            <div className="flex items-center gap-2 mt-0.5 text-[8px] sm:text-[9px] text-[#60619c] font-mono flex-wrap">
+            <div className="flex items-center gap-2.5 text-[8px] sm:text-[9px] text-[#60619c] font-mono flex-wrap">
               {typeof link.clickCount === "number" && (
                 <div className="flex items-center gap-1">
-                  <MousePointerClick className="w-2.5 h-2.5" />
+                  <MousePointerClick className="w-2.5 h-2.5 text-[#f68d1f]" />
                   <span>{link.clickCount.toLocaleString()} clicks</span>
                 </div>
               )}
@@ -680,7 +651,7 @@ export function LinkCard({
         </a>
 
         {/* Right: Actions (Copy, Edit, Delete, Arrow) */}
-        <div className="flex items-center gap-1 shrink-0 ml-0.5">
+        <div className="flex items-center gap-1 shrink-0 ml-1">
           {/* Copy Button */}
           {link.url !== "#" && (
             <Button
@@ -689,60 +660,68 @@ export function LinkCard({
               title="URL 복사"
               variant="nintendoGold"
               size="sm"
-              className="h-5 sm:h-6 px-1.5 py-0 text-[8px] sm:text-[9px]"
+              className="h-6 px-2 py-0 text-[9px] font-black"
             >
               {copied ? (
                 <>
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  <span>OK</span>
+                  <span>복사됨</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-2.5 h-2.5" />
-                  <span>COPY</span>
+                  <span>복사</span>
                 </>
               )}
             </Button>
           )}
 
-          {/* Edit Button - ALWAYS VISIBLE */}
+          {/* Edit Button */}
           {onUpdate && (
             <Button
               type="button"
               onClick={handleStartEdit}
-              title="링크 수정 (인라인 편집)"
+              title="링크 수정"
               data-testid="edit-link-button"
               variant="nintendoPlate"
               size="sm"
-              className="h-5 sm:h-6 px-1.5 py-0 text-[8px] sm:text-[9px] font-bold text-[#3d4f97] hover:text-[#f68d1f] border border-[#3d4f97] hover:border-[#f68d1f] flex items-center gap-0.5 cursor-pointer opacity-100"
+              className="h-6 px-2 py-0 text-[9px] font-bold text-[#3d4f97] hover:text-[#f68d1f] border border-[#3d4f97] hover:border-[#f68d1f] flex items-center gap-0.5 cursor-pointer"
             >
               <Pencil className="w-2.5 h-2.5 text-[#3d4f97]" />
-              <span>EDIT</span>
+              <span>수정</span>
             </Button>
           )}
 
           {/* Delete Button */}
           {onDelete && (
-            <button
+            <Button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
               title="링크 삭제"
-              className="w-5 h-5 sm:w-6 sm:h-6 bg-[#dedede] hover:bg-[#e60012] hover:text-white text-[#60619c] border border-[#3d4f97] flex items-center justify-center rounded-[2px] transition-colors cursor-pointer"
+              data-testid="delete-link-button"
+              variant="destructive"
+              size="sm"
+              className="h-6 px-1.5 py-0 text-[9px] bg-[#e60012] hover:bg-[#ff1a2b] text-white flex items-center justify-center cursor-pointer"
             >
-              <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            </button>
+              {isDeleting ? (
+                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-2.5 h-2.5" />
+              )}
+            </Button>
           )}
 
-          {/* Button-Arrow-Chip: Signal Orange Chip */}
+          {/* External Link Direct Arrow */}
           <a
             href={link.url}
             target={link.url.startsWith("http") ? "_blank" : "_self"}
             rel="noopener noreferrer"
             onClick={handleClick}
-            className="w-4 h-4 sm:w-5 sm:h-5 bg-[#f68d1f] group-hover:bg-[#e48600] text-white border border-[#283463] flex items-center justify-center transition-transform group-hover:translate-x-0.5 shadow-xs shrink-0 rounded-[2px]"
+            className="w-6 h-6 rounded-[2px] bg-[#21242e] text-[#f68d1f] group-hover:bg-[#e60012] group-hover:text-white flex items-center justify-center transition-colors ml-0.5 shadow-xs"
+            title="바로 이동"
           >
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+            <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
           </a>
         </div>
       </div>

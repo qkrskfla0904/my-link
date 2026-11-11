@@ -244,6 +244,8 @@ export function subscribeToLinksFromFirestore(
 
 /**
  * Increment click counter for a link in Firestore `users/{userId}/links/{linkId}`
+ * Note: This uses direct Firestore write. For production with strict security rules,
+ * consider migrating to Cloud Functions.
  */
 export async function incrementFirestoreLinkClick(userId: string, linkId: string): Promise<void> {
   try {
@@ -319,6 +321,9 @@ export async function syncUserProfileToFirestore(
     const userDoc = getUserDocRef(userId);
     const existing = await getDoc(userDoc);
 
+    const emailUsername = userData.email ? userData.email.split("@")[0] : "";
+    const resolvedDisplayName = userData.displayName || emailUsername || "마이링크 사용자";
+
     const payload: Record<string, unknown> = {
       uid: userId,
       email: userData.email || "",
@@ -328,20 +333,23 @@ export async function syncUserProfileToFirestore(
 
     if (!existing.exists()) {
       payload.createdAt = serverTimestamp();
-      payload.displayName = userData.displayName || "마이링크 사용자";
+      payload.displayName = resolvedDisplayName;
+      payload.username = emailUsername || resolvedDisplayName;
       payload.photoURL = userData.photoURL || "";
       payload.bio = userData.bio || "환영합니다! 나만의 맞춤형 링크 모음입니다. 🚀";
       payload.views = 1;
       payload.likes = 0;
-      payload.tags = ["💻 프론트엔드", "🚀 Next.js & React"];
+      payload.tags = ["💻 개발자", "🚀 Next.js & React"];
       payload.statusMessage = "새로운 기회와 커피챗 언제나 환영합니다 ☕";
       payload.isAvailableForHire = true;
     } else {
       payload.updatedAt = serverTimestamp();
       const existingData = existing.data();
-      // Only set initial fallback if not already configured in user document
-      if (!existingData.displayName && userData.displayName) {
-        payload.displayName = userData.displayName;
+      if (!existingData.displayName && resolvedDisplayName) {
+        payload.displayName = resolvedDisplayName;
+      }
+      if (!existingData.username && emailUsername) {
+        payload.username = emailUsername;
       }
       if (!existingData.photoURL && userData.photoURL) {
         payload.photoURL = userData.photoURL;
@@ -437,6 +445,138 @@ export async function checkDisplayNameDuplicate(
       isAvailable: true,
       message: "사용 가능한 닉네임입니다. (로컬 검증 완료)",
     };
+  }
+}
+
+/**
+ * Find user by displayName, username, or userId (doc ID) in Firestore `users` collection.
+ */
+export async function getUserByDisplayName(
+  displayName: string
+): Promise<{ userId: string; profile: UserProfile } | null> {
+  const trimmed = displayName.trim();
+  if (!trimmed) return null;
+
+  try {
+    let userDocSnap: DocumentData | null = null;
+    let resolvedUserId = "";
+
+    // 1. Direct lookup by Document ID (userId / uid)
+    try {
+      const directRef = getUserDocRef(trimmed);
+      const directSnap = await getDoc(directRef);
+      if (directSnap.exists()) {
+        userDocSnap = directSnap;
+        resolvedUserId = directSnap.id;
+      }
+    } catch {
+      // Ignore direct lookup error
+    }
+
+    const usersCol = collection(db, "users");
+
+    // 2. Query by displayName exact match
+    if (!userDocSnap) {
+      try {
+        const qName = query(usersCol, where("displayName", "==", trimmed), limit(1));
+        const nameSnapshot = await getDocs(qName);
+        if (!nameSnapshot.empty) {
+          userDocSnap = nameSnapshot.docs[0];
+          resolvedUserId = nameSnapshot.docs[0].id;
+        }
+      } catch (err) {
+        console.warn("Query by displayName failed:", err);
+      }
+    }
+
+    // 3. Fallback: Query by username
+    if (!userDocSnap) {
+      try {
+        const qUsername = query(usersCol, where("username", "==", trimmed), limit(1));
+        const usernameSnapshot = await getDocs(qUsername);
+        if (!usernameSnapshot.empty) {
+          userDocSnap = usernameSnapshot.docs[0];
+          resolvedUserId = usernameSnapshot.docs[0].id;
+        }
+      } catch (err) {
+        console.warn("Query by username failed:", err);
+      }
+    }
+
+    // 4. Fallback: Query by email prefix or email
+    if (!userDocSnap) {
+      try {
+        const qEmail = query(usersCol, where("email", "==", trimmed), limit(1));
+        const emailSnapshot = await getDocs(qEmail);
+        if (!emailSnapshot.empty) {
+          userDocSnap = emailSnapshot.docs[0];
+          resolvedUserId = emailSnapshot.docs[0].id;
+        }
+      } catch (err) {
+        console.warn("Query by email failed:", err);
+      }
+    }
+
+    // 5. Fallback: Scan recent users to match case-insensitively or partial email match
+    if (!userDocSnap) {
+      try {
+        const fallbackQuery = query(usersCol, limit(50));
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        const lowerTrimmed = trimmed.toLowerCase();
+
+        for (const d of fallbackSnapshot.docs) {
+          const docData = d.data();
+          const dName = (docData.displayName || "").toLowerCase();
+          const dUser = (docData.username || "").toLowerCase();
+          const dEmail = (docData.email || "").toLowerCase();
+          const dEmailPrefix = dEmail.split("@")[0];
+
+          if (
+            dName === lowerTrimmed ||
+            dUser === lowerTrimmed ||
+            dEmail === lowerTrimmed ||
+            dEmailPrefix === lowerTrimmed
+          ) {
+            userDocSnap = d;
+            resolvedUserId = d.id;
+            break;
+          }
+        }
+      } catch (err) {
+        console.warn("Fallback user scan failed:", err);
+      }
+    }
+
+    if (!userDocSnap) {
+      return null;
+    }
+
+    const data = userDocSnap.data();
+    const userId = resolvedUserId;
+
+    // Fetch user's links from users/{userId}/links
+    const links = await getLinksFromFirestore(userId);
+
+    const profile: UserProfile = {
+      id: userId,
+      username: data.username || (data.email ? data.email.split("@")[0] : trimmed),
+      displayName: data.displayName || trimmed,
+      bio: data.bio || "",
+      avatarUrl: data.photoURL || undefined,
+      tags: Array.isArray(data.tags) && data.tags.length > 0 ? data.tags : ["💻 개발자", "🔗 마이링크"],
+      statusMessage: data.statusMessage || "개인 링크 모음",
+      isAvailableForHire: data.isAvailableForHire ?? true,
+      stats: {
+        views: data.views ?? 1,
+        likes: data.likes ?? 0,
+      },
+      links,
+    };
+
+    return { userId, profile };
+  } catch (error) {
+    console.error("Error finding user by displayName in Firestore:", error);
+    return null;
   }
 }
 
